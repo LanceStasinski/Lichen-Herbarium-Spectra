@@ -1,0 +1,25 @@
+{
+    "id": "751FED26",
+    "path": "~/GitHub/Lichen-Herbarium-Spectra/join-metadata.R",
+    "project_path": "join-metadata.R",
+    "type": "r_source",
+    "hash": "2096863185",
+    "contents": "",
+    "dirty": false,
+    "created": 1618230162474.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "tempName": "Untitled1",
+        "cursorPosition": "0,0",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1618257988,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1618257988270,
+    "read_only": false,
+    "read_only_alternatives": []
+}

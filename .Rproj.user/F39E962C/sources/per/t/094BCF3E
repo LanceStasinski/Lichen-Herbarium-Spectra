@@ -1,0 +1,32 @@
+{
+    "id": "094BCF3E",
+    "path": null,
+    "project_path": null,
+    "type": "r_dataframe",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1618247377438.0,
+    "source_on_save": false,
+    "relative_order": 5,
+    "properties": {
+        "expression": "split2_trimmed",
+        "caption": "split2_trimmed",
+        "totalObservations": 10,
+        "displayedObservations": 10,
+        "variables": 2,
+        "cacheKey": "BB61CE29",
+        "object": "split2_trimmed",
+        "environment": "",
+        "contentUrl": "grid_resource/gridviewer.html?env=&obj=split2_trimmed&cache_key=BB61CE29&max_cols=50",
+        "preview": 0
+    },
+    "folds": "",
+    "lastKnownWriteTime": 2037016365160,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1618247377438,
+    "read_only": false,
+    "read_only_alternatives": []
+}
