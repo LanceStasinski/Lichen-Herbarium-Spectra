@@ -262,3 +262,26 @@ df.x = classify_time(df.x, time_name = "split2", n_classes = 2,
                      time_span = 10, start_year = 2010)
 df.x2 = df.x %>% group_by(scientificName) %>%
   filter(length(unique(split2)) == 2)
+
+################################################################################
+#histograms: Frequency vs time by species
+################################################################################
+
+species = as.data.frame(table(df$scientificName))
+usable = species[species$Freq > 9,]
+species.list = as.character(usable$Var1)
+species.2 = species.list[c(6,13)]
+df.15 = df[df$scientificName %in% species.list,]
+
+par(mfrow = c(5, 3))
+for (i in 1:length(species.list)) {
+  hist(df[df$scientificName == species.list[i],]$year, main = species.list[i],
+       xlab = "Year", breaks = 20, xlim = c(1960,2012))
+}
+
+par(mfrow = c(2,1))
+for (i in 1:length(species.2)) {
+  hist(df[df$scientificName == species.2[i],]$year, main = species.2[i],
+       xlab = "Year", breaks = 20, xlim = c(1890, 2010))
+}
+
