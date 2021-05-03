@@ -3,7 +3,7 @@
     "path": "~/GitHub/Lichen-Herbarium-Spectra/time-classes.R",
     "project_path": "time-classes.R",
     "type": "r_source",
-    "hash": "848129237",
+    "hash": "384918892",
     "contents": "",
     "dirty": false,
     "created": 1617983464866.0,
@@ -11,15 +11,15 @@
     "relative_order": 2,
     "properties": {
         "tempName": "Untitled1",
-        "cursorPosition": "275,0",
-        "scrollLine": "256"
+        "cursorPosition": "289,0",
+        "scrollLine": "267"
     },
     "folds": "",
-    "lastKnownWriteTime": 1618355006,
+    "lastKnownWriteTime": 1619282968,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1618355006860,
+    "last_content_update": 1619282968650,
     "read_only": false,
     "read_only_alternatives": []
 }

@@ -285,3 +285,14 @@ for (i in 1:length(species.2)) {
        xlab = "Year", breaks = 20, xlim = c(1890, 2010))
 }
 
+df.small = df[df$year > 1969 & df$year < 2011,]
+par(mfrow = c(2,1))
+hist(df$year, xlab = "Year", main = "1886 - 2012")
+hist(df.small$year, xlab = "Year", main = "1970 - 2010")
+
+
+
+
+
+
+
