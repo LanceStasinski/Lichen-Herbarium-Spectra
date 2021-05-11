@@ -66,6 +66,10 @@ spec24.2.1 = clean_spectra(spec24.2)
 #add peltigera spectra to full spectra
 spec_all = Reduce(combine, list(spec_all, spec24.1.1, spec24.2.1))
 
+#smooth
+spec_all = smooth(spec_all)
+
+vn = normalize(spec_all)
 
 
 
