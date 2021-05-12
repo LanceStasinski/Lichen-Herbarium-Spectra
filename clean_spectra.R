@@ -69,6 +69,46 @@ spec_all = Reduce(combine, list(spec_all, spec24.1.1, spec24.2.1))
 #smooth
 spec_all = smooth(spec_all)
 
+################################################################################
+#add metadata
+################################################################################
+#clean meta data
+data = read.csv("metadata/metadata_joined.csv", stringsAsFactors = F)
+data = data[!data$File.Name == "",]
+data = data[!data$Quality == "BAD",]
+data = data[!data$Quality == "Not Scanned, bad",]
+data = data[!data$X.1 == 161, ]
+rownames(data) = data$File.Name
+
+#clean up spectra names
+m = as.matrix(spec_all)
+rownames(m) = gsub(".sig", "", rownames(m))
+names(spec_all) = rownames(m)
+spec_names = as.data.frame(rownames(m))
+colnames(spec_names) = "spectra_ID"
+
+#match data and scan names
+idx2 = sapply(rownames(data), grep, spec_names$spectra_ID)
+
+#remove data entries that do not have associated spectra
+no_spectra = c("721604.1980", "815554.1991", "772360.1971", "691863.1963", 
+               "941507.1998", "21435.1897", "673814.1974", "15239.1899",
+               "871614.2000", "14293.1899")
+data = data[!rownames(data) %in% no_spectra,]
+
+#match names again
+idx2 = sapply(rownames(data), grep, spec_names$spectra_ID)
+idx1 <- sapply(seq_along(idx2), function(i) rep(i, length(idx2[[i]])))
+new_data = cbind(data[unlist(idx1),,drop=F], spec_names[unlist(idx2),,drop=F])
+
+#bring to excell to modify rownames to match spectra names
+write.csv(new_data, "metadata/meta_full.csv")
+
+#Now remove repeated names in scan_names, then remove any names in the metadata 
+#that are not in the spectra names
+
+meta(spec_all) =
+
 vn = normalize(spec_all)
 
 
