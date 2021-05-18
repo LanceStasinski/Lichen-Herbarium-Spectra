@@ -84,8 +84,16 @@ data = data[names(spec_new),,drop = F]
 
 #Finally, add the metadata
 meta(spec_new) = data
+
 saveRDS(spec_new, "spectra/lichen_spectra.rds")
 
+#fix some typing errors in the metadata and resave
+spec_all = readRDS("spectra/lichen_spectra.rds")
+
+meta(spec_all)$Morphology = gsub("Foliose", "foliose", meta(spec_all)$Morphology)
+meta(spec_all)$scientificName = gsub(" ","_", meta(spec_all)$scientificName)
+
+saveRDS(spec_all, "spectra/lichen_spectra.rds")
 #vector normalize
-vn = normalize(spec_new)
+vn = normalize(spec_all)
 saveRDS(vn, "spectra/lichen_spectra_vn.rds")
