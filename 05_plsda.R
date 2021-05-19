@@ -17,11 +17,12 @@ library(rlist)
 ################################################################################
 spec_all = readRDS("spectra/lichen_spectra.rds")
 className = "scientificName"
+ncomp = 3
+resampling = 'down'
 #data
 classify = function(file, className, ncomp, resampling) {
 
   spec_all = readRDS(file)
-  
   spec_mat = as.matrix(spec_all)
   spec_all.df = as.data.frame(spec_all)
   
@@ -31,34 +32,32 @@ classify = function(file, className, ncomp, resampling) {
   colnames(spec_df)[colnames(spec_df) == className] <- className
   uniqueNames = unique(spec_all.df[[className]])
 
-  ################################################################################
+  ##################
   #Run PLSDA
-  ################################################################################
+  ##################
   
-  #create vectors, lists, and matrices to store metrics and loadings
+  #create vectors, lists, and matrices to store metrics and variable importance
   accuracy = c()
   kappa = c()
   a.fit = matrix(nrow = ncomp)
   cm.list = list()
-  vipName = c()
-  
+  vip.list = list()
+
+  #create variable importance matrix for each class
   for(i in 1:length(uniqueNames)){
     name = paste(uniqueNames[i], "vip", sep = ".")
-    vipName = append(vipName, name)
+    vip.list = list.append(vip.list, assign(name, matrix(nrow = 2001)))
   }
   
-  
-  da.vip = matrix(nrow=2001)
-  do.vip = matrix(nrow=2001)
-  dx.vip = matrix(nrow=2001)
+
   
   #start of PLSDA code
-  for(i in 1:100){
+  for(i in 1:1){
     
     #create data partition: 70% of data for training, 30% for testing
     inTrain <- caret::createDataPartition(
-      y = spec_df$Species_ID,
-      p = .8,
+      y = spec_df[[className]],
+      p = .7,
       list = FALSE
     )
     
@@ -69,12 +68,12 @@ classify = function(file, className, ncomp, resampling) {
     ctrl <- trainControl(
       method = "repeatedcv",
       number = 10,
-      sampling = 'down',
+      sampling = resampling,
       repeats = 3)
     
     #Fit model. Note max iterations set to 10000 to allow model convergence
     plsFit <- train(
-      Species_ID ~ .,
+#----->      training[[className]] ~ .,
       data = training,
       maxit = 100000,
       method = "pls",
@@ -84,15 +83,11 @@ classify = function(file, className, ncomp, resampling) {
     
     #variable importance
     vip = varImp(plsFit)
+    for (j in 1:length(uniqueNames)) {
+      class.vip = assign(paste0(uniqueNames[j], i), vip$importance$uniqueNames(j))
+      vip.list[j] = cbind(vip.list[j], class.vip)
+    }
     
-    da = assign(paste0('da', i), vip$importance$DA)
-    da.vip <- cbind(da.vip, get('da'))
-    
-    do = assign(paste0('do', i), vip$importance$DO)
-    do.vip <- cbind(do.vip, get('do'))
-    
-    #dx = assign(paste0('dx', i), vip$importance$DX)
-    #dx.vip <- cbind(dx.vip, get('dx'))
     
     #accuracy objects for determining n components
     a = assign(paste0('a', i), as.matrix(plsFit$results$Accuracy))
@@ -111,8 +106,8 @@ classify = function(file, className, ncomp, resampling) {
     
     kap = assign(paste0("kap",i), cm$overall[2])
     kappa <- append(kappa, get('kap'))
+  }
 }
-
 ################################################################################
 #Kappa and Accuracy assessed after 100 iterations
 ################################################################################
