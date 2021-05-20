@@ -71,10 +71,11 @@ classify = function(file, className, ncomp, resampling) {
       sampling = resampling,
       repeats = 3)
     
-    #Fit model. Note max iterations set to 10000 to allow model convergence
+    #Fit model. Note max iterations set to 100000 to allow model convergence
     plsFit <- train(
-#----->      training[[className]] ~ .,
-      data = training,
+      training,
+      training[[className]],
+    
       maxit = 100000,
       method = "pls",
       trControl = ctrl,
