@@ -1,13 +1,14 @@
 ################################################################################
 #Caret PLSDA single function
 ##This function takes in a spectra file name, the name of the column to be
-#classified, the number of components to use, and the type of resampling to be 
-#done ('up' or 'down'). The function will return a list object that contains 
-#a list of matrices containing variable importance values for each species, 
-#a matrix of model accuracy (rows = components, columns = iteration), and 
-#vectors for overall accuracy and kappa statistics. 
+#classified, the number of components to use, the type of resampling to be 
+#done ('up' or 'down'), and the number of iterations to complete. The function 
+#will return a list object that contains a list of matrices containing variable 
+#importance values for each species, a matrix of model accuracy 
+#(rows = components, columns = iteration), and vectors for overall accuracy and 
+#kappa statistics. 
 ################################################################################
-classify = function(file, className, ncomp, resampling) {
+classify = function(file, className, ncomp, resampling, n_iteration) {
   #require packages
   require(spectrolab)
   require(caret)
@@ -48,7 +49,7 @@ classify = function(file, className, ncomp, resampling) {
 
   
   #start of PLSDA code
-  for(i in 1:1){
+  for(i in 1:n_iteration){
     
     #create data partition: 70% of data for training, 30% for testing
     inTrain <- caret::createDataPartition(
@@ -84,12 +85,9 @@ classify = function(file, className, ncomp, resampling) {
       vip.list[[k]] = cbind(vip.list[[k]], get('class.vip'))
     }
     
-    results = list.append(results, vip.list)
-    
     #accuracy objects for determining n components
     a = assign(paste0('a', i), as.matrix(plsFit$results$Accuracy))
     a.fit <- cbind(a.fit, get('a'))
-    results = list.append(results, a.fit)
     
     #test model using the testing data partition (20% of data)
     plsClasses <- predict(plsFit, newdata = testing)
@@ -98,18 +96,24 @@ classify = function(file, className, ncomp, resampling) {
     cm = confusionMatrix(data = plsClasses, as.factor(testing[[className]]))
     cm.m = assign(paste0("cm", i), as.matrix(cm))
     cm.list <- list.append(cm.list, get('cm.m'))
-    results = list.append(results, cm.list)
     
     ac <- assign(paste0('acc',i), cm$overall[1])
     accuracy <- append(accuracy, get('ac'))
-    results = list.append(results, accuracy)
     
     kap = assign(paste0("kap",i), cm$overall[2])
     kappa <- append(kappa, get('kap'))
-    results = list.append(results, kappa)
     
-    return(results)
   }
+  
+  results = list.append(results, vip.list)
+  results = list.append(results, a.fit)
+  results = list.append(results, cm.list)
+  results = list.append(results, accuracy)
+  results = list.append(results, kappa)
+  
+  
+  return(results)
+  
 }
 
 saveRDS(classify, "functions/plsda.rds")
