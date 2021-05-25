@@ -12,20 +12,17 @@ library(rlist)
 clean_spectra = function(spectra) {
   #match sensor overlap
   matched = match_sensors(spectra, splice_at = c(990, 1900),
-                          interpolate_wvl = 10)
-  #trim spectra to 400:2400 nm
-  trimmed = matched[ , bands(matched, 400, 2400)]
+                          interpolate_wvl = c(5,1))
   
-  #resample to give all spectra same number of bands. 2.231 chosen for band 
-  #resolution because this is the average band size of 896 bands between 
-  #400.7 and 2399.4. 896 is the lowest band count for these spectra, and the 
-  #different spectra within this dataset may not be the same size due to a 
-  #change in collection procedure or change in the selected parameters of on the
-  #instrument
-  resampled = resample(trimmed, seq(400.7, 2399.4, 2.231))
+  #Resample to 1nm resolution to make interpretation easier and trim to 400:2400nm
+  trimmed = matched[ , bands(matched, 392, 2415)]
+  
+  resampled = resample(trimmed, seq(392,2415, 1))
+  
+  t.resamp = resampled[, 400:2400]
   
   #remove any unlabeled white references
-  noWR = resampled[!rowSums(resampled > 1),]
+  noWR = t.resamp[!rowSums(t.resamp > 1),]
   return(noWR)
 }
 
@@ -41,7 +38,7 @@ spec.dirs2 = spec.dirs[-24] #peltigera elisabethae has two sets of spectra:
 spec_list = list()
 for (i in 1:length(spec.dirs2)) {
   #read in spectra. Exclude bad and white reference scans
-  raw = read_spectra(path = spec.dirs2[i], format = "sig", 
+  raw = read_spectra(path = spec.dirs2[5], format = "sig", 
                       exclude_if_matches = c("BAD", "WR"))
   
   #match sensors, trim and resample spectra
@@ -55,16 +52,20 @@ for (i in 1:length(spec.dirs2)) {
 spec_all = Reduce(combine, spec_list)
 
 #handle the peltigera spectra
-spec24 = read_spectra(path = spec.dirs[24], format = "sig", 
+spec.p = read_spectra(path = spec.dirs[24], format = "sig", 
                       exclude_if_matches = c("BAD", "WR"))
-spec24.1 = spec24[[1]]
-spec24.2 = spec24[[2]]
+spec.p.1 = spec.p[[1]]
+spec.p.2 = spec.p[[2]]
 
-spec24.1.1 = clean_spectra(spec24.1)
-spec24.2.1 = clean_spectra(spec24.2)
+spec.p.1.1 = clean_spectra(spec.p.1)
+
+spec.p.2.1 = spec.p.2[, bands(spec.p.2, 392, 2415)]
+spec.p.2.2 = resample(spec.p.2.1, seq(392,2415, 1))
+spec.p.2.3 = spec.p.2.2[, 400:2400]
+
 
 #add peltigera spectra to full spectra
-spec_all = Reduce(combine, list(spec_all, spec24.1.1, spec24.2.1))
+spec_all = Reduce(combine, list(spec_all, spec.p.1.1, spec.p.2.3))
 
 #smooth
 spec_all = smooth(spec_all)
