@@ -8,6 +8,7 @@
 #(rows = components, columns = iteration), and vectors for overall accuracy and 
 #kappa statistics. 
 ################################################################################
+
 classify = function(file, className, ncomp, resampling, n_iteration) {
   #require packages
   require(spectrolab)
@@ -43,7 +44,7 @@ classify = function(file, className, ncomp, resampling, n_iteration) {
   #create variable importance matrix for each class
   for(j in 1:length(uniqueNames)){
     name = paste(uniqueNames[j], "vip", sep = ".")
-    vip.list = list.append(vip.list, assign(name, matrix(nrow = 896)))
+    vip.list = list.append(vip.list, assign(name, matrix(nrow = ncol(spec_mat))))
   }
   
 

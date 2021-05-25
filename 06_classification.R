@@ -89,27 +89,17 @@ write.csv(cm.total, "figures/confusion_matrices/cm_csv/Species.csv")
 
 
 #plot confusion matrix
-cols = colorRampPalette(c('#f5f5f5', '#fe9929'))
+cols = colorRampPalette(c('white', '#fe9929'))
 
 par(mfrow = c(1,1))
 corrplot::corrplot(as.matrix(cm.total),
-                   is.corr = F, 
-                   method = 'square', 
-                   col = cols(10),
-                   addCoef.col = '#542788',
-                   tl.srt = 0, 
-                   tl.offset = 1, 
-                   number.digits = NULL, 
-                   tl.cex = 1.2, 
-                   cl.cex = 1, 
-                   number.cex = 1.5,
-                   tl.col = 'black', 
-                   tl.pos = 'n',
-                   cl.pos = 'n',
+                   method = 'square',
+                   tl.col = 'black',
                    cl.lim = c(0,1),
-                   na.label = 'square', 
+                   na.label = 'square',
                    na.label.col = 'white',
-                   addgrid.col = 'grey')
+                   col = cols(10))
+
 mtext("Reference", side = 2, line = -8, cex = 2.5)
 mtext("Prediction", side = 3, cex = 2.5, at = 2, line = 3)
 
@@ -117,36 +107,18 @@ mtext("Prediction", side = 3, cex = 2.5, at = 2, line = 3)
 #Variable importance
 ################################################################################
 vip_to_spec = function(x){
-  t.vip = t(x)
-  colnames(t.vip) <- seq(400,2400, by = 1)
+  t.vip = t(x[,-1])
+  colnames(t.vip) <- gsub("`", "", colnames(t.vip))
   s.vip = as_spectra(t.vip)
+  plot(mean(s.vip), lwd = 1.5, lty = 1, ylim = c(0, 100),
+       ylab = "Variable Importance", xlab = "Wavelength (nm)", cex.lab = 1)
+  plot_quantile(s.vip, total_prob = 0.95, col = rgb(0, 0, 0, 0.25), 
+                border = FALSE, add = TRUE)
 }
-do.vip = do.vip[,-1]
-do.vip.spec = vip_to_spec(do.vip)
 
-da.vip = da.vip[,-1]
-da.vip.spec = vip_to_spec(da.vip)
+vip.list = pls[[1]]
+par(mfrow = c(5,6))
+for (j in 1:length(vip.list)) {
+  vip_to_spec(vip.list[[j]])
+}
 
-#dx.vip = dx.vip[,-1]
-#dx.vip.spec = vip_to_spec(dx.vip)
-
-#plot
-par(mfrow = c(2,1))
-
-plot(mean(da.vip.spec), lwd = 1.5, lty = 1, col = '#00B0F6', ylim = c(0, 100),
-     ylab = "Variable Importance", xlab = NA, cex.lab = 1.5)
-plot_quantile(da.vip.spec, total_prob = 0.95, col = rgb(0, 0.69, 0.965, 0.25), 
-              border = FALSE, add = TRUE)
-
-
-plot(mean(do.vip.spec), lwd = 2, lty = 1, col = '#F8766D', 
-     cex.lab = 1.5, ylim = c(0, 100), ylab = "Variable Importance", 
-     xlab = NA)
-plot_quantile(do.vip.spec, total_prob = 0.95, col = rgb(0.972549,0.4627451,0.427451, 0.25), 
-              border = FALSE, add = TRUE)
-
-
-plot(mean(dx.vip.spec), lwd = 1.5, lty = 1, col = rgb(0,0,0,1), ylim = c(0, 100),
-     ylab = "Variable Importance", xlab = 'Wavelength (nm)', cex.lab = 1.5)
-plot_quantile(dx.vip.spec, total_prob = 0.95, col = rgb(0, 0, 0, 0.25), 
-              border = FALSE, add = TRUE)
