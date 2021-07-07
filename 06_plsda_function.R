@@ -48,7 +48,7 @@ classify = function(spectra, className, ncomp, resampling, n_iteration, include_
   #create variable importance matrix for each class
   for(j in 1:length(uniqueNames)){
     name = paste(uniqueNames[j], "vip", sep = ".")
-    vip.list = list.append(vip.list, assign(name, matrix(nrow = ncol(spec_mat))))
+    vip.list = list.append(vip.list, assign(name, matrix(nrow = ncol(spec_df)-1)))
   }
   
 
