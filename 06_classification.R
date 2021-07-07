@@ -11,10 +11,11 @@ library(spectrolab)
 ################################################################################
 #run plsda
 ################################################################################
+spectra = readRDS('spectra/lichen_spectra.rds')
 
 classify = readRDS("functions/plsda.rds")
 
-pls = classify(file = "spectra/lichen_spectra.rds", 
+pls = classify(spectra = spectra, 
                className = "scientificName",
                ncomp = 26, 
                resampling = 'up',
