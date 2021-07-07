@@ -17,10 +17,13 @@ classify = readRDS("functions/plsda.rds")
 
 pls = classify(spectra = spectra, 
                className = "scientificName",
-               ncomp = 26, 
-               resampling = 'up',
-               n_iteration = 100)
-saveRDS(pls, 'models/species.rds')
+               ncomp = 50, 
+               resampling = 'down',
+               n_iteration = 100,
+               include_age = TRUE)
+
+saveRDS(pls, 'models/species_age.rds')
+
 pls = readRDS('models/species.rds')
 ################################################################################
 #Assess accuracy and kappa
