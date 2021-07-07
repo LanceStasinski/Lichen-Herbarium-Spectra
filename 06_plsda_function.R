@@ -9,7 +9,7 @@
 #kappa statistics. 
 ################################################################################
 
-classify = function(spectra, className, ncomp, resampling, n_iteration) {
+classify = function(spectra, className, ncomp, resampling, n_iteration, include_age) {
   #require packages
   require(spectrolab)
   require(caret)
@@ -28,6 +28,10 @@ classify = function(spectra, className, ncomp, resampling, n_iteration) {
   spec_df = cbind(spec_df, spec_all.df[className])
   colnames(spec_df)[colnames(spec_df) == className] <- className
   uniqueNames = unique(spec_all.df[[className]])
+  
+  if (include_age == TRUE) {
+    spec_df$age = spec_all.df$age
+  }
 
   ##################
   #Run PLSDA
