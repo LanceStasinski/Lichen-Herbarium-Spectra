@@ -6,6 +6,7 @@
 library(corrplot)
 library(matrixStats)
 library(naniar)
+library(spectrolab)
 
 ################################################################################
 #run plsda
@@ -15,14 +16,16 @@ classify = readRDS("functions/plsda.rds")
 
 pls = classify(file = "spectra/lichen_spectra.rds", 
                className = "scientificName",
-               ncomp = 3, 
-               resampling = 'down',
-               n_iteration = 3)
-
+               ncomp = 26, 
+               resampling = 'up',
+               n_iteration = 100)
+saveRDS(pls, 'models/species.rds')
+pls = readRDS('models/species.rds')
 ################################################################################
 #Assess accuracy and kappa
 ################################################################################
 accuracy = pls[[4]]
+  
 mean(accuracy)
 sd(accuracy)
 
@@ -42,10 +45,10 @@ a.lower = a.avg - a.sd
 a.higher = a.avg + a.sd
 
 #Graph to visually choose optimal number of components
-x = 1:3
+x = 1:50
 par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(5.1, 4.1, 4.1, 2.1))
 plot(x, a.avg, type = 'p', pch = 16, cex = .75, ylab = 'Accuracy', 
-     xlab = 'Component', xlim = c(1,60), main = 'Accuracy for Species_ID', 
+     xlab = 'Component', xlim = c(1,50), main = 'Accuracy for Species_ID', 
      ylim = c(0,1))
 arrows(x, a.lower, x, a.higher,length=0.05, angle=90, code=3)
 abline(v = which.max(a.avg), col = 'blue')
@@ -111,13 +114,14 @@ vip_to_spec = function(x){
   colnames(t.vip) <- gsub("`", "", colnames(t.vip))
   s.vip = as_spectra(t.vip)
   plot(mean(s.vip), lwd = 1.5, lty = 1, ylim = c(0, 100),
-       ylab = "Variable Importance", xlab = "Wavelength (nm)", cex.lab = 1)
+       ylab = "Variable Importance", xlab = "Wavelength (nm)", cex.lab = 1,
+       main = names(s.vip)[1])
   plot_quantile(s.vip, total_prob = 0.95, col = rgb(0, 0, 0, 0.25), 
                 border = FALSE, add = TRUE)
 }
 
 vip.list = pls[[1]]
-par(mfrow = c(5,6))
+par(mfrow = c(3,5))
 for (j in 1:length(vip.list)) {
   vip_to_spec(vip.list[[j]])
 }
