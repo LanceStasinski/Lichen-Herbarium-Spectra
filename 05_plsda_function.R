@@ -1,6 +1,6 @@
 ################################################################################
 #Caret PLSDA single function
-##This function takes in a spectra file name, the name of the column to be
+##This function takes in spectra, the name of the column to be
 #classified, the number of components to use, the type of resampling to be 
 #done ('up' or 'down'), and the number of iterations to complete. The function 
 #will return a list object that contains a list of matrices containing variable 
@@ -9,7 +9,7 @@
 #kappa statistics. 
 ################################################################################
 
-classify = function(file, className, ncomp, resampling, n_iteration) {
+classify = function(spectra, className, ncomp, resampling, n_iteration) {
   #require packages
   require(spectrolab)
   require(caret)
@@ -19,7 +19,7 @@ classify = function(file, className, ncomp, resampling, n_iteration) {
   require(mlbench)
   
   #load spectra and convert to matrix and dataframe
-  spec_all = readRDS(file)
+  spec_all = spectra
   spec_mat = as.matrix(spec_all)
   spec_all.df = as.data.frame(spec_all)
   
