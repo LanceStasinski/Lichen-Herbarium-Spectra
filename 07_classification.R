@@ -17,8 +17,8 @@ classify = readRDS("functions/plsda.rds")
 
 pls = classify(spectra = spectra, 
                className = "scientificName",
-               ncomp = 50, 
-               resampling = 'down',
+               ncomp = 32, 
+               resampling = 'up',
                n_iteration = 100,
                include_age = TRUE)
 
@@ -29,7 +29,6 @@ pls = readRDS('models/species.rds')
 #Assess accuracy and kappa
 ################################################################################
 accuracy = pls[[4]]
-  
 mean(accuracy)
 sd(accuracy)
 

@@ -46,6 +46,8 @@ for (i in 1:length(uniqueNames)) {
   plot(classList[[i]]$wavelength, classList[[i]]$reflectance,
        ylab = 'Change in reflectance per year',
        xlab = 'Wavelength (nm)',
-       main = uniqueNames[i])
+       main = uniqueNames[i],
+       ylim = c(-.015, .05))
+       
 }
 
