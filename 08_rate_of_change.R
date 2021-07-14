@@ -16,11 +16,11 @@ uniqueNames = unique(meta(spectra)$scientificName)
 classList = list()
 
 for(i in 1:length(uniqueNames)) {
-  classSpec = spectra[meta(spectra)$scientificName == uniqueNames[i],]
+  classSpec = spectra[meta(spectra)$scientificName == 'Flavoparmelia_caperata',]#uniqueNames[1],]
   classSpec_df = as.data.frame(classSpec)
   slope.list = c()
   for (j in 400:2400) {
-    spec = as.data.frame(classSpec[,j])
+    spec = as.data.frame(classSpec[,400])
     spec = cbind(spec, classSpec_df$age)
     colnames(spec) = c('reflectance', 'age')
     m = lm(reflectance ~ age, data = spec)
@@ -51,3 +51,18 @@ for (i in 1:length(uniqueNames)) {
        
 }
 
+
+#models
+spectra = readRDS('spectra/lichen_spectra.rds')
+uniqueNames = unique(meta(spectra)$scientificName)
+classList = list()
+classSpec = spectra[meta(spectra)$scientificName == 'Flavoparmelia_caperata',]#uniqueNames[1],]
+classSpec_df = as.data.frame(classSpec)
+spec = as.data.frame(classSpec[,400])
+spec = cbind(spec, classSpec_df$age)
+colnames(spec) = c('reflectance', 'age')
+
+linear = lm(reflectance ~ age, data = spec)
+logit = glm(reflectance ~ age, data = spec, family = binomial)
+sp = lm(reflectance ~ ns(age, df = 3), data = spec)
+lines(x, predict(sp, data.frame(age = x)), col = 'blue')

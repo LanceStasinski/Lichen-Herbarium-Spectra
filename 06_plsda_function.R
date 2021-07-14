@@ -109,9 +109,7 @@ classify = function(spectra, className, ncomp, resampling, n_iteration, include_
     kap = assign(paste0("kap",i), cm$overall[2])
     kappa <- append(kappa, get('kap'))
     
-    #append model to model.list
-    model.list = list.append(model.list, plsFit)
-    
+
   }
   
   results = list.append(results, vip.list)
@@ -119,8 +117,7 @@ classify = function(spectra, className, ncomp, resampling, n_iteration, include_
   results = list.append(results, cm.list)
   results = list.append(results, accuracy)
   results = list.append(results, kappa)
-  results = list.append(results, model.list)
-  
+
   return(results)
   
 }
