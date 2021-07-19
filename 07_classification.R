@@ -16,13 +16,13 @@ spectra = readRDS('spectra/lichen_spectra.rds')
 classify = readRDS("functions/plsda.rds")
 
 pls = classify(spectra = spectra, 
-               className = "scientificName",
-               ncomp = 32, 
-               resampling = 'up',
+               className = "Family",
+               ncomp = 60, 
+               resampling = 'down',
                n_iteration = 100,
-               include_age = TRUE)
+               include_age = F)
 
-saveRDS(pls, 'models/species_age.rds')
+saveRDS(pls, 'models/family.rds')
 
 pls = readRDS('models/species_age.rds')
 ################################################################################
