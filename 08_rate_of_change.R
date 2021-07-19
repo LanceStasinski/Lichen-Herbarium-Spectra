@@ -74,6 +74,9 @@ lines(x, predict(logit, data.frame(age = x), type="response"), col = 'blue')
 lines(x, predict(sp, data.frame(age = x)), col = 'green')
 
 ################################################################################
+#slope by age classes
+################################################################################ 
+
 lmp <- function (modelobject) {
   if (class(modelobject) != "lm") stop("Not an object of class 'lm' ")
   f <- summary(modelobject)$fstatistic
@@ -86,19 +89,19 @@ spectra = readRDS('spectra/lichen_spectra.rds')
 spectra = normalize(spectra)
 spectra = spectra[meta(spectra)$age < 60,]
 
-uniqueNames = unique(meta(spectra)$scientificName)
+uniqueNames = unique(meta(spectra)$Class)
 speciesList = list()
 nameList = c()
 
 for(i in 1:length(uniqueNames)) {
-  classSpec = spectra[meta(spectra)$scientificName == uniqueNames[i],]
+  classSpec = spectra[meta(spectra)$Class == uniqueNames[i],]
   classSpec_df = as.data.frame(classSpec)
 
   #skip if time series has less than 12 specimens (12 specimens * 4 scans = 48)
   if(nrow(classSpec_df) < 48) {
     next
   }
-  nameList = append(nameList, unique(classSpec_df$scientificName))
+  nameList = append(nameList, unique(classSpec_df$Class))
   
   df.list = list()
   #break age into 10 year intervals
@@ -131,7 +134,7 @@ for(i in 1:length(uniqueNames)) {
 }
 
 #plot
-par(mfrow = c(2, 4))
+par(mfrow = c(1, 3))
 for(x in 1:length(speciesList)) {
   species = speciesList[[x]]
   
