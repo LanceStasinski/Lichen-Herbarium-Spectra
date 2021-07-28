@@ -18,13 +18,13 @@ classify = readRDS("functions/plsda.rds")
 pls = classify(spectra = spectra, 
                className = "Family",
                ncomp = 60, 
-               resampling = 'down',
+               resampling = 'up',
                n_iteration = 100,
                include_age = F)
 
 saveRDS(pls, 'models/family.rds')
 
-pls = readRDS('models/species_age.rds')
+pls = readRDS('models/family.rds')
 ################################################################################
 #Assess accuracy and kappa
 ################################################################################
@@ -48,10 +48,10 @@ a.lower = a.avg - a.sd
 a.higher = a.avg + a.sd
 
 #Graph to visually choose optimal number of components
-x = 1:50
+x = 1:60
 par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(5.1, 4.1, 4.1, 2.1))
 plot(x, a.avg, type = 'p', pch = 16, cex = .75, ylab = 'Accuracy', 
-     xlab = 'Component', xlim = c(1,50), main = 'Accuracy for Species_ID', 
+     xlab = 'Component', xlim = c(1,60), main = 'Accuracy for Species_ID', 
      ylim = c(0,1))
 arrows(x, a.lower, x, a.higher,length=0.05, angle=90, code=3)
 abline(v = which.max(a.avg), col = 'blue')
@@ -81,7 +81,7 @@ cm.sd = t(cm.sd)
 cm.sd = cm.sd/rowSums(cm.avg)
 rownames(cm.sd) = rownames(as.matrix(cm.list[[1]]))
 colnames(cm.sd) = colnames(as.matrix(cm.list[[1]]))
-write.csv(cm.sd, file = 'figures/confusion_matrices/standard deviations/Species_sd.csv')
+write.csv(cm.sd, file = 'figures/confusion_matrices/standard deviations/Family_sd.csv')
 
 #format matrix for plotting
 cm.total = as.data.frame(cm.total)
@@ -91,7 +91,7 @@ rownames(cm.total) = rownames(as.matrix(cm.list[[1]]))
 colnames(cm.total) = colnames(as.matrix(cm.list[[1]]))
 
 #save confusion matrix
-write.csv(cm.total, "figures/confusion_matrices/cm_csv/Species.csv")
+write.csv(cm.total, "figures/confusion_matrices/cm_csv/Family.csv")
 
 
 #plot confusion matrix
