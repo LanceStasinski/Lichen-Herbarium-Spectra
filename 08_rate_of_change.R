@@ -7,33 +7,72 @@ library(spectrolab)
 library(rlist)
 library(splines)
 ################################################################################
-#rate of per wavelength per class
+#comparison of functions - testing
 ################################################################################
 
 spectra = readRDS('spectra/lichen_spectra.rds')
 
-uniqueNames = unique(meta(spectra)$scientificName)
-classList = list()
+spec = spectra[meta(spectra)$scientificName == 'Flavoparmelia_caperata',]
+spec700 = spec[, 700]
+spec_df = as.data.frame(spec)
+spec_m = as.data.frame(as.matrix(spec700))
+colnames(spec_m) =  'ref'
+spec_m$age = spec_df$age
+spec_m = spec_m[spec_m$age <= 60,]
 
-for(i in 1:length(uniqueNames)) {
-  classSpec = spectra[meta(spectra)$scientificName == 'Flavoparmelia_caperata',]#uniqueNames[1],]
-  classSpec_df = as.data.frame(classSpec)
-  slope.list = c()
-  for (j in 400:2400) {
-    spec = as.data.frame(classSpec[,700])
-    spec = cbind(spec, classSpec_df$age)
-    colnames(spec) = c('reflectance', 'age')
-    m = lm(reflectance ~ age, data = spec)
-    slope.list = append(slope.list, m$coefficients[2])
-  }
+linear = lm(ref~age, data = spec_m)
+expon = lm(log(ref)~age, data = spec_m)
+sp = lm(ref ~ ns(age, df = 6), data = spec_m)
+
+
+timevalues <- seq(0, 123, 1)
+expon2 <- exp(predict(expon, list(age=timevalues)))
+linear2 = predict(linear, list(age=timevalues))
+
+plot(spec_m$age, spec_m$ref, pch=16, xlab = "Age (years)", ylab = "Reflectance")
+lines(timevalues, expon2,lwd=2, col = "red")
+lines(timevalues, linear2, lwd=2, col = 'blue')
+lines(timevalues, predict(sp, data.frame(age = timevalues)), col = 'green')
+
+AIC(linear)
+AIC(expon)
+AIC(sp)
+################################################################################
+#comparison of functions
+################################################################################
+spectra = readRDS('spectra/lichen_spectra.rds')
+spec_df = as.data.frame(spectra)
+
+lin_aic = c()
+ex_aic = c()
+sp_aic = c()
+
+for(i in seq(400, 2400, 1)) {
+  x = toString(i)
+  linear = lm(spec_df[, x] ~ spec_df$age)
+  expon = lm(log(spec_df[, x]) ~ spec_df$age)
+  sp = lm(spec_df[, x] ~ ns(spec_df$age, df = 3))
   
-  slope = as.data.frame(slope.list)
-  colnames(slope) = c('reflectance')
-  slope$wavelength = seq(400, 2400, by = 1)
-  classList = list.append(classList, slope)
+  lin_aic = append(lin_aic, AIC(linear))
+  ex_aic = append(ex_aic, AIC(expon))
+  sp_aic = append(sp_aic, AIC(sp))
 }
 
-saveRDS(classList, 'models/slopes/species.rds')
+
+max = max(c(max(lin_aic), max(ex_aic), max(sp_aic)))
+min = min(c(min(lin_aic), min(ex_aic), min(sp_aic)))
+
+wv = seq(400, 2400, 1)
+
+#plot all: linear, exponential, spline
+plot(wv, lin_aic, type='l', lty = 1, col = 'blue', ylim = c(min, max), ylab = 'AIC', xlab = 'Wavelength (nm)')
+lines(wv, ex_aic, lty = 1, col = 'red' )
+lines(wv, sp_aic, lty = 1, col = 'green')
+
+#plot linear and spline AIC
+plot(wv, lin_aic, type='l', lty = 1, col = 'blue', ylab = 'AIC', xlab = 'Wavelength (nm)')
+lines(wv, sp_aic, lty = 1, col = 'green')
+
 
 ################################################################################
 #plot
