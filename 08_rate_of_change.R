@@ -43,6 +43,7 @@ AIC(sp)
 spectra = readRDS('spectra/lichen_spectra.rds')
 spec_df = as.data.frame(spectra)
 
+
 lin_aic = c()
 ex_aic = c()
 sp_aic = c()
@@ -51,7 +52,7 @@ for(i in seq(400, 2400, 1)) {
   x = toString(i)
   linear = lm(spec_df[, x] ~ spec_df$age)
   expon = lm(log(spec_df[, x]) ~ spec_df$age)
-  sp = lm(spec_df[, x] ~ ns(spec_df$age, df = 3))
+  sp = lm(spec_df[, x] ~ ns(spec_df$age, df = 6))
   
   lin_aic = append(lin_aic, AIC(linear))
   ex_aic = append(ex_aic, AIC(expon))
@@ -68,10 +69,17 @@ wv = seq(400, 2400, 1)
 plot(wv, lin_aic, type='l', lty = 1, col = 'blue', ylim = c(min, max), ylab = 'AIC', xlab = 'Wavelength (nm)')
 lines(wv, ex_aic, lty = 1, col = 'red' )
 lines(wv, sp_aic, lty = 1, col = 'green')
+legend('topright',
+       legend = c('Linear', 'Exponential', 'Spline'),
+       lty = 1, col = c('blue', 'red', 'green'))
 
 #plot linear and spline AIC
 plot(wv, lin_aic, type='l', lty = 1, col = 'blue', ylab = 'AIC', xlab = 'Wavelength (nm)')
 lines(wv, sp_aic, lty = 1, col = 'green')
+legend('topright',
+       legend = c('Linear', 'Spline'),
+       lty = 1, col = c('blue', 'green'))
+
 
 
 ################################################################################
