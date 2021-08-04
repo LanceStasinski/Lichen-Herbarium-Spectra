@@ -38,7 +38,7 @@ AIC(linear)
 AIC(expon)
 AIC(sp)
 ################################################################################
-#comparison of functions
+#comparison of functions - all samples
 ################################################################################
 spectra = readRDS('spectra/lichen_spectra.rds')
 spec_df = as.data.frame(spectra)
@@ -81,9 +81,83 @@ legend('topright',
        lty = 1, col = c('blue', 'green'))
 
 
+################################################################################
+#comparison of functions - by taxonomic unit
+################################################################################
+functionTypeComparison = function(spectra, splineDF, taxa){
+  
+  spec_df = as.data.frame(spectra)
+  uniqueNames = unique(spec_df[, taxa])
+  
+  completeList = list()
+  nameList = c()
+  fullAicList = list()
+  
+  for (i in 1:length(uniqueNames)) {
+    species_spec = spec_df[spec_df[, taxa] == uniqueNames[i],]
+    
+    if (length(unique(species_spec$age)) < splineDF + 2) {
+      next
+    }
+    
+    nameList = append(nameList, uniqueNames[i])
+    
+    lin_aic = c()
+    ex_aic = c()
+    sp_aic = c()
+    
+    for(j in seq(400, 2400, 1)) {
+      wl = toString(j)
+      linear = lm(species_spec[, wl] ~ species_spec$age)
+      expon = lm(log(species_spec[, wl]) ~ species_spec$age)
+      sp = lm(species_spec[, wl] ~ ns(species_spec$age, df = splineDF))
+      
+      lin_aic = append(lin_aic, AIC(linear))
+      ex_aic = append(ex_aic, AIC(expon))
+      sp_aic = append(sp_aic, AIC(sp))
+    }
+    
+    taxonAIC = Reduce(cbind, list(lin_aic, ex_aic, sp_aic))
+    colnames(taxonAIC) = c('linear', 'expon', 'spline')
+    
+    fullAicList = list.append(fullAicList, taxonAIC)
+    
+  }
+  
+  completeList = list.append(completeList, fullAicList)
+  completeList = list.append(completeList, nameList)
+  
+  return(completeList)
+}
+
+spectra = readRDS('spectra/lichen_spectra.rds')
+taxaAIC = functionTypeComparison(spectra = spectra, splineDF = 6, taxa = 'scientificName')
+
+spec_df = as.data.frame(spectra)
+taxa = 'scientificName'
+
+par(mfrow = c(3,5))
+for(x in 1:length(taxaAIC[[2]])) {
+  taxon = as.data.frame(taxaAIC[[1]][x])
+  max = max(c(max(taxon$linear), max(taxon$expon), max(taxon$spline)))
+  min = min(c(min(taxon$linear), min(taxon$expon), min(taxon$spline)))
+  wv = seq(400, 2400, 1)
+  
+  #plot all: linear, exponential, spline
+  #plot(wv, taxon$linear, type='l', lty = 1, col = 'blue', ylim = c(min, max),
+       #ylab = 'AIC', xlab = 'Wavelength (nm)', main = taxaAIC[[2]][x])
+  #lines(wv, taxon$expon, lty = 1, col = 'red' )
+  #lines(wv, taxon$spline, lty = 1, col = 'green')
+  
+  #plot linear and spline AIC
+  plot(wv, taxon$linear, type='l', lty = 1, col = 'blue', ylab = 'AIC', xlab = 'Wavelength (nm)', main = taxaAIC[[2]][x])
+  lines(wv, taxon$spline, lty = 1, col = 'green')
+  
+}
+
 
 ################################################################################
-#plot
+#plot - may delete soon
 ################################################################################
 par(mfrow = c(3, 5))
 for (i in 1:length(uniqueNames)) {
