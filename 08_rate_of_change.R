@@ -13,16 +13,16 @@ library(splines)
 spectra = readRDS('spectra/lichen_spectra.rds')
 
 spec = spectra[meta(spectra)$scientificName == 'Flavoparmelia_caperata',]
-spec700 = spec[, 700]
+spec700 = spec[, 2000]
 spec_df = as.data.frame(spec)
 spec_m = as.data.frame(as.matrix(spec700))
 colnames(spec_m) =  'ref'
 spec_m$age = spec_df$age
-spec_m = spec_m[spec_m$age <= 60,]
+#spec_m = spec_m[spec_m$age <= 60,]
 
 linear = lm(ref~age, data = spec_m)
 expon = lm(log(ref)~age, data = spec_m)
-sp = lm(ref ~ ns(age, df = 6), data = spec_m)
+sp = lm(ref ~ ns(age, df = 3), data = spec_m)
 
 
 timevalues <- seq(0, 123, 1)
@@ -30,7 +30,7 @@ expon2 <- exp(predict(expon, list(age=timevalues)))
 linear2 = predict(linear, list(age=timevalues))
 
 plot(spec_m$age, spec_m$ref, pch=16, xlab = "Age (years)", ylab = "Reflectance")
-lines(timevalues, expon2,lwd=2, col = "red")
+#lines(timevalues, expon2,lwd=2, col = "red")
 lines(timevalues, linear2, lwd=2, col = 'blue')
 lines(timevalues, predict(sp, data.frame(age = timevalues)), col = 'green')
 
