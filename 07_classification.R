@@ -20,9 +20,9 @@ pls = classify(spectra = spectra,
                ncomp = 60, 
                resampling = 'up',
                n_iteration = 100,
-               include_age = F)
+               include_age = T)
 
-saveRDS(pls, 'models/family.rds')
+saveRDS(pls, 'models/family_age.rds')
 
 pls = readRDS('models/family.rds')
 ################################################################################
