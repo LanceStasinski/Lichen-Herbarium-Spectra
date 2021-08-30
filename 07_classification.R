@@ -16,15 +16,15 @@ spectra = readRDS('spectra/lichen_spectra.rds')
 classify = readRDS("functions/plsda.rds")
 
 pls = classify(spectra = spectra, 
-               className = "Family",
-               ncomp = 60, 
+               className = "Order",
+               ncomp = 53, 
                resampling = 'up',
                n_iteration = 100,
-               include_age = T)
+               include_age = F)
 
-saveRDS(pls, 'models/family_age.rds')
+saveRDS(pls, 'models/order.rds')
 
-pls = readRDS('models/family.rds')
+pls = readRDS('models/order.rds')
 ################################################################################
 #Assess accuracy and kappa
 ################################################################################
@@ -81,7 +81,7 @@ cm.sd = t(cm.sd)
 cm.sd = cm.sd/rowSums(cm.avg)
 rownames(cm.sd) = rownames(as.matrix(cm.list[[1]]))
 colnames(cm.sd) = colnames(as.matrix(cm.list[[1]]))
-write.csv(cm.sd, file = 'figures/confusion_matrices/standard deviations/Family_sd.csv')
+write.csv(cm.sd, file = 'figures/confusion_matrices/standard deviations/Family_age__sd.csv')
 
 #format matrix for plotting
 cm.total = as.data.frame(cm.total)
@@ -91,7 +91,7 @@ rownames(cm.total) = rownames(as.matrix(cm.list[[1]]))
 colnames(cm.total) = colnames(as.matrix(cm.list[[1]]))
 
 #save confusion matrix
-write.csv(cm.total, "figures/confusion_matrices/cm_csv/Family.csv")
+write.csv(cm.total, "figures/confusion_matrices/cm_csv/Family_age.csv")
 
 
 #plot confusion matrix
