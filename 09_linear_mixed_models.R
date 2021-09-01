@@ -155,6 +155,7 @@ summary(lmm_fixedslope)
 ################################################################################
 
 spectra = readRDS('spectra/lichen_spectra.rds')
+#spectra = normalize(spectra)
 #4 scans per individual cannot be treated as independent in a linear model, so 
 #I'm taking the mean per individual
 #spectra = aggregate(spectra, by = meta(spectra)$X, mean, try_keep_txt(mean))
@@ -167,9 +168,11 @@ age_effect_list = c()
 age_97.5_list = c()
 age_2.5_list = c()
 
+
 for(i in seq(400, 2400, 1)) {
     x = toString(i)
-    lmm = lmer(sqrt(spec_df[, x]) ~ log10(spec_df$age) + (log10(spec_df$age)|spec_df$scientificName))
+    spec_scaled = scale(spectra[,x], center = T, scale = T)
+    lmm = lmer(spec_scaled ~ log10(spec_df$age) + (log10(spec_df$age)|spec_df$scientificName))
     
     d = as.data.frame(VarCorr(lmm))
     intercept_var = d[1,4]
@@ -196,10 +199,10 @@ stats_list = list.append(stats_list, age_effect_list)
 stats_list = list.append(stats_list, age_97.5_list)
 stats_list = list.append(stats_list, age_2.5_list)
 
-saveRDS(stats_list, 'models/lmm_1.rds')
+saveRDS(stats_list, 'models/lmm_scaled.rds')
 
 wv = seq(400, 2400, 1)
-plot(wv, abs(stats_list[[3]]),
+plot(wv, stats_list[[3]],
      type = 'l', 
      xlab = 'Wavelength (nm)', 
      ylab = 'Effect of age (log10(age)/sqrt(wavelength))',
@@ -224,8 +227,31 @@ legend('topright',
 
 
 
+################################################################################
+#testing
+################################################################################
 
-lines(wv, stats_list[[4]], 
-      col = 'grey')
-lines(wv, stats_list[[5]], 
-      col = 'grey')
+spectra = readRDS('spectra/lichen_spectra.rds')
+#spectra = normalize(spectra)
+#4 scans per individual cannot be treated as independent in a linear model, so 
+#I'm taking the mean per individual
+#spectra = aggregate(spectra, by = meta(spectra)$X, mean, try_keep_txt(mean))
+spec_df = as.data.frame(spectra)
+spec_df$scaled_age = scale(spec_df$age, scale = T, center = T)
+
+
+spec_scaled = scale(spectra[,400], center = T, scale = T)
+lmm1 = lmer(spec_scaled ~ log10(spec_df$age) + (log10(spec_df$age)|spec_df$scientificName))
+lmm2 = lmer(sqrt(spec_df[, 400]) ~ log10(spec_df$age) + (log10(spec_df$age)|spec_df$scientificName))
+lmm3 = lmer(spec_scaled ~ spec_df$age + (spec_df$age|spec_df$scientificName)) #fails
+lmm4 = lmer(spec_scaled ~ spec_df$scaled_age + (spec_df$scaled_age|spec_df$scientificName))
+lmm5 = lmer(sqrt(spec_scaled) ~ log10(spec_df$age) + (log10(spec_df$age)|spec_df$scientificName)) #fails
+lmm6 = lmer(spec_scaled ~ sqrt(spec_df$age) + (sqrt(spec_df$age)|spec_df$scientificName))
+lmm7 = lmer(spec_scaled ~ spec_df$age + (spec_df$age|spec_df$scientificName))
+
+
+AIC(lmm1)
+AIC(lmm2)
+AIC(lmm3)
+AIC(lmm4)
+AIC(lmm5)

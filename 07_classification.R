@@ -17,12 +17,12 @@ classify = readRDS("functions/plsda.rds")
 
 pls = classify(spectra = spectra, 
                className = "Order",
-               ncomp = 53, 
+               ncomp = 57, 
                resampling = 'up',
                n_iteration = 100,
-               include_age = F)
+               include_age = T)
 
-saveRDS(pls, 'models/order.rds')
+saveRDS(pls, 'models/order_age.rds')
 
 pls = readRDS('models/order.rds')
 ################################################################################
