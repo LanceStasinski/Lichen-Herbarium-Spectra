@@ -201,15 +201,19 @@ stats_list = list.append(stats_list, age_2.5_list)
 
 saveRDS(stats_list, 'models/lmm_scaled.rds')
 
+stats_list = readRDS('models/lmm_1_scaled.rds')
+
+par(mfrow = c(2,1))
 wv = seq(400, 2400, 1)
 plot(wv, stats_list[[3]],
      type = 'l', 
      xlab = 'Wavelength (nm)', 
-     ylab = 'Effect of age (log10(age)/sqrt(wavelength))',
+     ylab = 'Effect of age (age/scaled(wavelength))',
      ylim = c(min(stats_list[[5]]), max(stats_list[[4]])))
 polygon(c(wv, rev(wv)), c(stats_list[[4]], rev(stats_list[[5]])),
         col = 'grey80',
         lty = 0)
+abline(h = 0, lty = 2, col = 'blue')
 lines(wv, stats_list[[3]])
 
 
