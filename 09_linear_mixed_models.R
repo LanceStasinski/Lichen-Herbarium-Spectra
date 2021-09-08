@@ -11,6 +11,8 @@ library(ggeffects)
 library(sjPlot)
 library(rlist)
 
+lmm_varslope = lmer(`700` ~ age + (age|scientificName), data = spec_df, REML = FALSE, 
+                    +                     control = lmerControl(optimizer ="Nelder_Mead"))
 
 ################################################################################
 #comparison of functions - testing
@@ -115,6 +117,9 @@ lmm_varslope_log10_sqrt = lmer(log10(`700`) ~ sqrt(age) + (sqrt(age)|scientificN
 lmm_fixedslope = lmer(sqrt(`700`) ~ log10(age) + (1|scientificName), data = spec_df)
 
 
+lmm_no_log10age = lmer(sqrt(`700`) ~ age + (age|scientificName), data = spec_df)
+AIC(lmm_no_log10age)
+
 AIC(linear)
 AIC(glm)
 AIC(lmm)
@@ -153,15 +158,47 @@ summary(lmm_fixedslope)
 ################################################################################
 #Report desired statistics from all wavelengths
 ################################################################################
-
+library(optimx)
 spectra = readRDS('spectra/lichen_spectra.rds')
+spectra = spectra[meta(spectra)$age <= 60, ]
 #spectra = normalize(spectra)
 #4 scans per individual cannot be treated as independent in a linear model, so 
 #I'm taking the mean per individual
 #spectra = aggregate(spectra, by = meta(spectra)$X, mean, try_keep_txt(mean))
 spec_df = as.data.frame(spectra)
 
+varSlope_aic = c()
+fixedSlope_aic = c()
 
+for(i in seq(400, 2400, 10)) {
+    x = toString(i)
+    lmm_varSlope = lmer(spec_df[, x] ~ age + (age|scientificName), data = spec_df, REML = T, 
+                        lmerControl(
+                            optimizer ='optimx', optCtrl=list(method='nlminb')))
+    lmm_fixedSlope = lmer(spec_df[, x] ~ age + (1|scientificName), data = spec_df, REML = T, 
+                         control = lmerControl(
+                             optimizer ='optimx', optCtrl=list(method='nlminb')))
+    
+    varSlope_aic = append(varSlope_aic, AIC(lmm_varSlope))
+    fixedSlope_aic = append(fixedSlope_aic, AIC(lmm_fixedSlope))
+}
+
+wv = seq(400, 2400, 10)
+plot(wv, varSlope_aic, col = 'blue', type = 'l', xlab = 'Wavelength (nm)', ylab = 'AIC')
+lines(wv, fixedSlope_aic, col = 'red')
+legend('bottomright',
+       c('Variable slope & intercept', 'Variable intercept'),
+       col = c('blue', 'red'), lty = c(1,1))
+
+
+
+################################################################################
+spectra = readRDS('spectra/lichen_spectra.rds')
+spectra = spectra[meta(spectra)$age <= 60, ]
+spec_df = as.data.frame(spectra)
+
+ranEffects = as.data.frame(matrix(nrow = 29))
+rownames(ranEffects) = sort(unique(spec_df$scientificName))
 int_r2_list = c()
 slope_r2_list = c()
 age_effect_list = c()
@@ -171,9 +208,12 @@ age_2.5_list = c()
 
 for(i in seq(400, 2400, 1)) {
     x = toString(i)
-    spec_scaled = scale(spectra[,x], center = T, scale = T)
-    lmm = lmer(spec_scaled ~ log10(spec_df$age) + (log10(spec_df$age)|spec_df$scientificName))
+    lmm = lmer(spec_df[, x] ~ age + (age|scientificName), data = spec_df, REML = T, 
+               control = lmerControl(
+                   optimizer ='optimx', optCtrl=list(method='nlminb')))
     
+    ranEf = ranef(lmm)
+    ranEffects = cbind(ranEffects, as.data.frame(ranEf[[1]][2]))
     d = as.data.frame(VarCorr(lmm))
     intercept_var = d[1,4]
     slope_var = d[2,4]
@@ -187,7 +227,8 @@ for(i in seq(400, 2400, 1)) {
     
     age_effect_list = append(age_effect_list, as.numeric(fixef(lmm)[2]))
     
-    ci = confint(lmm)
+    
+    ci = confint(lmm, method = 'Wald')
     age_2.5_list = append(age_2.5_list, ci[6])
     age_97.5_list = append(age_97.5_list, ci[12])
 }
@@ -198,12 +239,15 @@ stats_list = list.append(stats_list, slope_r2_list)
 stats_list = list.append(stats_list, age_effect_list)
 stats_list = list.append(stats_list, age_97.5_list)
 stats_list = list.append(stats_list, age_2.5_list)
+ranEffects = ranEffects[,-1]
+colnames(ranEffects) = seq(400, 2400, 1)
+stats_list = list.append(stats_list, ranEffects)
 
-saveRDS(stats_list, 'models/lmm_scaled.rds')
+saveRDS(stats_list, 'models/lmm_60yrs.rds')
 
-stats_list = readRDS('models/lmm_1_scaled.rds')
+stats_list = readRDS('models/lmm_1_vn.rds')
 
-par(mfrow = c(2,1))
+par(mfrow = c(1,1))
 wv = seq(400, 2400, 1)
 plot(wv, stats_list[[3]],
      type = 'l', 
@@ -259,3 +303,14 @@ AIC(lmm2)
 AIC(lmm3)
 AIC(lmm4)
 AIC(lmm5)
+
+
+
+ctl = lmerControl(optimizer = 'Nelder_M')
+
+
+lmm_varslope1 = lmer(`700` ~ age + (age|scientificName), data = spec_df, REML = FALSE, 
+                     control = lmerControl(optimizer = "Nelder_Mead"))
+lmm_fixedslope = lmer(`700` ~ age + (1|scientificName), data = spec_df, REML = FALSE, 
+                      control = lmerControl(optimizer = "Nelder_Mead"))
+
