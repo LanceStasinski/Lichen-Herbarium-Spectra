@@ -166,6 +166,8 @@ spectra = spectra[meta(spectra)$age <= 60, ]
 #I'm taking the mean per individual
 #spectra = aggregate(spectra, by = meta(spectra)$X, mean, try_keep_txt(mean))
 spec_df = as.data.frame(spectra)
+spec_df$age = scale(spec_df$age, center = TRUE, scale = TRUE)
+
 
 varSlope_aic = c()
 fixedSlope_aic = c()
@@ -196,6 +198,7 @@ legend('bottomright',
 spectra = readRDS('spectra/lichen_spectra.rds')
 spectra = spectra[meta(spectra)$age <= 60, ]
 spec_df = as.data.frame(spectra)
+spec_df$age = scale(spec_df$age, center = TRUE, scale = TRUE)
 
 ranEffects = as.data.frame(matrix(nrow = 29))
 rownames(ranEffects) = sort(unique(spec_df$scientificName))
@@ -243,7 +246,7 @@ ranEffects = ranEffects[,-1]
 colnames(ranEffects) = seq(400, 2400, 1)
 stats_list = list.append(stats_list, ranEffects)
 
-saveRDS(stats_list, 'models/lmm_60yrs.rds')
+saveRDS(stats_list, 'models/lmm_60yrs_scaledAge.rds')
 
 stats_list = readRDS('models/lmm_1_vn.rds')
 
