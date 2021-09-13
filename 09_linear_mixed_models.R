@@ -27,14 +27,14 @@ fixedSlope_aic = c()
 
 for(i in seq(400, 2400, 10)) {
     x = toString(i)
-    lmm_varSlope = lmer(spec_df[, x] ~ age + (age|Class), data = spec_df, REML = T, 
-                        lmerControl(
-                            optimizer ='optimx', optCtrl=list(method='nlminb')))
-    lmm_fixedSlope = lmer(spec_df[, x] ~ age + (1|Class), data = spec_df, REML = T, 
+    #lmm_varSlope = lmer(spec_df[, x] ~ age + (age|Class/Order/scientificName), data = spec_df, REML = T, 
+                       # lmerControl(
+                            #optimizer ='optimx', optCtrl=list(method='nlminb')))
+    lmm_fixedSlope = lmer(spec_df[, x] ~ age + (1|Class/Order/scientificName), data = spec_df, REML = T, 
                          control = lmerControl(
                              optimizer ='optimx', optCtrl=list(method='nlminb')))
     
-    varSlope_aic = append(varSlope_aic, AIC(lmm_varSlope))
+    #varSlope_aic = append(varSlope_aic, AIC(lmm_varSlope))
     fixedSlope_aic = append(fixedSlope_aic, AIC(lmm_fixedSlope))
 }
 
@@ -127,5 +127,26 @@ lines(wv, stats_list[[2]], col = 'blue')
 legend('topright',
        c('Intercept', 'Slope'),
        col = c('red', 'blue'), lty = c(1,1))
+
+################################################################################
+#Bayesian approach
+################################################################################
+library(blme)
+spectra = readRDS('spectra/lichen_spectra.rds')
+spectra = spectra[meta(spectra)$age <= 60, ]
+
+spec_df = as.data.frame(spectra)
+spec_df$age = scale(spec_df$age, center = TRUE, scale = TRUE)
+
+lmm = blmer(spec_df[, '700'] ~ age + (age|scientificName), data = spec_df, REML = T, 
+            control = lmerControl(
+                optimizer ='optimx', optCtrl=list(method='nlminb')))
+
+
+
+
+
+
+
 
 

@@ -16,13 +16,13 @@ spectra = readRDS('spectra/lichen_spectra.rds')
 classify = readRDS("functions/plsda.rds")
 
 pls = classify(spectra = spectra, 
-               className = "Order",
-               ncomp = 57, 
+               className = "Class",
+               ncomp = 24, 
                resampling = 'up',
                n_iteration = 100,
-               include_age = T)
+               include_age = F)
 
-saveRDS(pls, 'models/order_age.rds')
+saveRDS(pls, 'models/class.rds')
 
 pls = readRDS('models/order_age.rds')
 ################################################################################
@@ -81,7 +81,7 @@ cm.sd = t(cm.sd)
 cm.sd = cm.sd/rowSums(cm.avg)
 rownames(cm.sd) = rownames(as.matrix(cm.list[[1]]))
 colnames(cm.sd) = colnames(as.matrix(cm.list[[1]]))
-write.csv(cm.sd, file = 'figures/confusion_matrices/standard deviations/order_age__sd.csv')
+write.csv(cm.sd, file = 'figures/confusion_matrices/standard deviations/class_sd.csv')
 
 #format matrix for plotting
 cm.total = as.data.frame(cm.total)
@@ -91,7 +91,7 @@ rownames(cm.total) = rownames(as.matrix(cm.list[[1]]))
 colnames(cm.total) = colnames(as.matrix(cm.list[[1]]))
 
 #save confusion matrix
-write.csv(cm.total, "figures/confusion_matrices/cm_csv/order_age.csv")
+write.csv(cm.total, "figures/confusion_matrices/cm_csv/class.csv")
 
 
 #plot confusion matrix
@@ -124,7 +124,7 @@ vip_to_spec = function(x){
 }
 
 vip.list = pls[[1]]
-par(mfrow = c(3,5))
+par(mfrow = c(2,3))
 for (j in 1:length(vip.list)) {
   vip_to_spec(vip.list[[j]])
 }
