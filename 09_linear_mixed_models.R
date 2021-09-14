@@ -27,14 +27,13 @@ fixedSlope_aic = c()
 
 for(i in seq(400, 2400, 10)) {
     x = toString(i)
-    #lmm_varSlope = lmer(spec_df[, x] ~ age + (age|Class/Order/scientificName), data = spec_df, REML = T, 
-                       # lmerControl(
-                            #optimizer ='optimx', optCtrl=list(method='nlminb')))
+    lmm_varSlope = lmer(spec_df[, '700'] ~ age + (age|Class/Order/Family), data = spec_df, REML = T, 
+                        lmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
     lmm_fixedSlope = lmer(spec_df[, x] ~ age + (1|Class/Order/scientificName), data = spec_df, REML = T, 
                          control = lmerControl(
-                             optimizer ='optimx', optCtrl=list(method='nlminb')))
+                           optimizer ='optimx', optCtrl=list(method='nlminb')))
     
-    #varSlope_aic = append(varSlope_aic, AIC(lmm_varSlope))
+    varSlope_aic = append(varSlope_aic, AIC(lmm_varSlope))
     fixedSlope_aic = append(fixedSlope_aic, AIC(lmm_fixedSlope))
 }
 
@@ -99,9 +98,15 @@ ranEffects = ranEffects[,-1]
 colnames(ranEffects) = seq(400, 2400, 1)
 stats_list = list.append(stats_list, ranEffects)
 
-saveRDS(stats_list, 'models/lmm_60yrs_family.rds')
+saveRDS(stats_list, 'models/lmms/lmm_60yrs_family.rds')
 
-stats_list = readRDS('models/lmm_1_vn.rds')
+
+################################################################################
+#Plot
+################################################################################
+
+stats_list = readRDS('models/lmms/lmm_60yrs.rds')
+slopes = stats_list[[6]]
 
 par(mfrow = c(1,1))
 wv = seq(400, 2400, 1)
@@ -109,10 +114,13 @@ plot(wv, stats_list[[3]],
      type = 'l', 
      xlab = 'Wavelength (nm)', 
      ylab = 'Effect of age (age/scaled(wavelength))',
-     ylim = c(min(stats_list[[5]]), max(stats_list[[4]])))
+     ylim = c(min(stats_list[[5]]), max(stats_list[[6]])))
 polygon(c(wv, rev(wv)), c(stats_list[[4]], rev(stats_list[[5]])),
         col = 'grey80',
         lty = 0)
+#for (i in 1:nrow(slopes)){
+  #lines(wv, slopes[i,], col = 'grey' )
+#}
 abline(h = 0, lty = 2, col = 'blue')
 lines(wv, stats_list[[3]])
 
@@ -128,6 +136,8 @@ legend('topright',
        c('Intercept', 'Slope'),
        col = c('red', 'blue'), lty = c(1,1))
 
+
+plot(as_spectra(slopes))
 ################################################################################
 #Bayesian approach
 ################################################################################
