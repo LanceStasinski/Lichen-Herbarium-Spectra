@@ -13,6 +13,41 @@ library(rlist)
 library(optimx)
 
 ################################################################################
+#Evaluate optimizers
+################################################################################
+install.packages('dfoptim')
+
+library(tidyverse)
+library(lme4)
+library(optimx)
+library(parallel)
+library(minqa)
+library(dfoptim)
+
+#Prepare data
+spectra = readRDS('spectra/lichen_spectra.rds')
+spectra = spectra[meta(spectra)$age <= 60, ]
+data = meta(spectra)
+spec.m = as.matrix(spectra) * 100
+spectra_percent = as_spectra(spec.m)
+meta(spectra_percent) = data
+spec_df = as.data.frame(spectra_percent)
+
+#model
+
+lmm = lmer(spec_df[, '850'] ~ age + (age|Order/Family/scientificName),
+           data = spec_df)
+
+#Run model with all optimizers
+ncores <- detectCores() - 4
+diff_optims <- allFit(lmm, maxfun = 1e5, parallel = 'multicore', ncpus = ncores)
+
+#Output
+is.OK <- sapply(diff_optims, is, "merMod")
+diff_optims.OK <- diff_optims[is.OK]
+lapply(diff_optims.OK,function(x) x@optinfo$conv$lme4$messages)
+
+################################################################################
 #Report desired statistics from all wavelengths
 ################################################################################
 spectra = readRDS('spectra/lichen_spectra.rds')
@@ -31,7 +66,7 @@ fixedSlope_aic = c()
 
 for(i in seq(400, 2400, 10)) {
     x = toString(i)
-    lmm_varSlope = lmer(spec_df[, '2050'] ~ age + (age|scientificName),
+    lmm_varSlope = lmer(spec_df[, '850'] ~ age + (age|Order/Family/scientificName),
                         data = spec_df, REML = T, 
                         lmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
     lmm_fixedSlope = lmer(spec_df[, x] ~ age + (1|Class/Order/Family), data = spec_df, REML = T, 
@@ -184,6 +219,9 @@ lines(wv, stats_list[[5]], col = 'gray')
 legend('bottomright',
        c('Intercept', 'Slope', 'Residual'),
        col = c('blue', 'red', 'gray'), lty = c(1,1,1))
+
+plot(wv, stats_list[[4]], main = 'Slope variance', ylab = 'variance',
+     xlab = 'Wavelength (nm)', type = 'l')
 ################################################################################
 #Bayesian approach
 ################################################################################
