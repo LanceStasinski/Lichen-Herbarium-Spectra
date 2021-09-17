@@ -22,9 +22,9 @@ pls = classify(spectra = spectra,
                n_iteration = 100,
                include_age = T)
 
-saveRDS(pls, 'models/class.rds')
+saveRDS(pls, 'models/class_age.rds')
 
-pls = readRDS('models/order_age.rds')
+pls = readRDS('models/species_age.rds')
 ################################################################################
 #Assess accuracy and kappa
 ################################################################################
@@ -81,7 +81,7 @@ cm.sd = t(cm.sd)
 cm.sd = cm.sd/rowSums(cm.avg)
 rownames(cm.sd) = rownames(as.matrix(cm.list[[1]]))
 colnames(cm.sd) = colnames(as.matrix(cm.list[[1]]))
-write.csv(cm.sd, file = 'figures/confusion_matrices/standard deviations/class_sd.csv')
+write.csv(cm.sd, file = 'figures/confusion_matrices/standard deviations/class_age_sd.csv')
 
 #format matrix for plotting
 cm.total = as.data.frame(cm.total)
@@ -91,7 +91,7 @@ rownames(cm.total) = rownames(as.matrix(cm.list[[1]]))
 colnames(cm.total) = colnames(as.matrix(cm.list[[1]]))
 
 #save confusion matrix
-write.csv(cm.total, "figures/confusion_matrices/cm_csv/class.csv")
+write.csv(cm.total, "figures/confusion_matrices/cm_csv/class_age.csv")
 
 
 #plot confusion matrix
