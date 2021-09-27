@@ -11,7 +11,31 @@ library(ggeffects)
 library(sjPlot)
 library(rlist)
 library(optimx)
+library(forecast)
 
+
+#example
+spectra = readRDS('spectra/lichen_spectra.rds')
+spectra = spectra[meta(spectra)$age <= 60, ]
+spectra = aggregate(spectra, by = meta(spectra)$X, mean, try_keep_txt(mean))
+data = meta(spectra)
+spec.m = as.matrix(spectra) * 100
+spectra_percent = as_spectra(spec.m)
+meta(spectra_percent) = data
+spec_df = as.data.frame(spectra_percent)
+
+lmm1 = lmer(BoxCox(spec_df[, '700'], lambda = 'auto') ~ age + (age|Class/Order/Family/scientificName),
+           data = spec_df, REML = T, 
+           lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, 
+                       optCtrl = list(maxfun = 1e5)))
+summary(lmm1)
+plot(lmm1)
+
+lmm2 = lmer(spec_df[, '700'] ~ age + (age|Class/Order/Family),
+           data = spec_df, REML = T, 
+           lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, 
+                       optCtrl = list(maxfun = 1e5)))
+summary(lmm2)
 ################################################################################
 #Evaluate optimizers
 ################################################################################
@@ -33,7 +57,7 @@ spec_df = as.data.frame(spectra_percent)
 
 #model
 
-lmm = lmer(spec_df[, '1932'] ~ age + (age|Class/Order/Family/scientificName), REML = T,
+lmm = lmer(spec_df[, '700'] ~ age + (age|Class/Order/Family/scientificName), REML = T,
            data = spec_df)
 
 #Run model with all optimizers
@@ -826,252 +850,201 @@ spec.m = as.matrix(spectra) * 100
 spectra_percent = as_spectra(spec.m)
 meta(spectra_percent) = data
 spec_df = as.data.frame(spectra_percent)
-stats_list = readRDS('models/lmms/lmm_hier_60yrs.rds')
+stats_list = readRDS('models/lmms/lmm_hier2_60yrs.rds')
 
-#species
-par(mfrow = c(2,1))
-##slopes
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[19]],
-     type = 'l', 
-     xlab = 'Wavelength (nm)', 
-     ylab = 'Effect of age (% reflectance/year)',
-     ylim = c(min(stats_list[[5]]), max(stats_list[[5]])),
-     main = 'Slopes - Species')
-polygon(c(wv, rev(wv)), c(stats_list[[22]], rev(stats_list[[23]])),
-        col = 'grey90',
-        lty = 0)
-for (i in 1:nrow(stats_list[[5]])){
-  lines(wv, stats_list[[5]][i,], col = 'grey' )
-}
-abline(h = 0, lty = 2, col = 'blue')
-lines(wv, stats_list[[19]])
-
-##intercepts
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[18]],
-     type = 'l', 
-     xlab = 'Wavelength (nm)', 
-     ylab = 'Intercept (% reflectance)',
-     ylim = c(min(stats_list[[1]]), max(stats_list[[21]])),
-     main = 'Intercepts - Species')
-polygon(c(wv, rev(wv)), c(stats_list[[20]], rev(stats_list[[21]])),
-        col = 'grey90',
-        lty = 0)
-for (i in 1:nrow(stats_list[[1]])){
-  lines(wv, stats_list[[1]][i,], col = 'grey' )
-}
-abline(h = 0, lty = 2, col = 'blue')
-lines(wv, stats_list[[18]])
 
 ################################################################################
 #Family
 par(mfrow = c(2,1))
 ##slopes
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[19]],
+wv = seq(400, 2400, 10)
+plot(wv, stats_list[[15]],
      type = 'l', 
      xlab = 'Wavelength (nm)', 
      ylab = 'Effect of age (% reflectance/year)',
-     ylim = c(min(stats_list[[6]]), max(stats_list[[23]])),
+     ylim = c(min(stats_list[[4]]), max(stats_list[[19]])),
      main = 'Slopes - Family')
-polygon(c(wv, rev(wv)), c(stats_list[[22]], rev(stats_list[[23]])),
-        col = 'grey90',
-        lty = 0)
-for (i in 1:nrow(stats_list[[6]])){
-  lines(wv, stats_list[[6]][i,], col = 'grey' )
-}
-abline(h = 0, lty = 2, col = 'blue')
-lines(wv, stats_list[[19]])
-
-##intercepts
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[18]],
-     type = 'l', 
-     xlab = 'Wavelength (nm)', 
-     ylab = 'Intercept (% reflectance)',
-     ylim = c(min(stats_list[[2]]), max(stats_list[[2]])),
-     main = 'Intercepts - Family')
-polygon(c(wv, rev(wv)), c(stats_list[[20]], rev(stats_list[[21]])),
-        col = 'grey90',
-        lty = 0)
-for (i in 1:nrow(stats_list[[2]])){
-  lines(wv, stats_list[[2]][i,], col = 'grey' )
-}
-abline(h = 0, lty = 2, col = 'blue')
-lines(wv, stats_list[[18]])
-
-################################################################################
-#Order
-par(mfrow = c(2,1))
-##slopes
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[19]],
-     type = 'l', 
-     xlab = 'Wavelength (nm)', 
-     ylab = 'Effect of age (% reflectance/year)',
-     ylim = c(min(stats_list[[22]]), max(stats_list[[23]])),
-     main = 'Slopes - Order')
-polygon(c(wv, rev(wv)), c(stats_list[[22]], rev(stats_list[[23]])),
-        col = 'grey90',
-        lty = 0)
-for (i in 1:nrow(stats_list[[7]])){
-  lines(wv, stats_list[[7]][i,], col = 'grey' )
-}
-abline(h = 0, lty = 2, col = 'blue')
-lines(wv, stats_list[[19]])
-
-##intercepts
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[18]],
-     type = 'l', 
-     xlab = 'Wavelength (nm)', 
-     ylab = 'Intercept (% reflectance)',
-     ylim = c(min(stats_list[[3]]), max(stats_list[[21]])),
-     main = 'Intercepts - Order')
-polygon(c(wv, rev(wv)), c(stats_list[[20]], rev(stats_list[[21]])),
-        col = 'grey90',
-        lty = 0)
-for (i in 1:nrow(stats_list[[3]])){
-  lines(wv, stats_list[[3]][i,], col = 'grey' )
-}
-abline(h = 0, lty = 2, col = 'blue')
-lines(wv, stats_list[[18]])
-
-################################################################################
-#Class
-par(mfrow = c(2,1))
-##slopes
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[19]],
-     type = 'l', 
-     xlab = 'Wavelength (nm)', 
-     ylab = 'Effect of age (% reflectance/year)',
-     ylim = c(min(stats_list[[8]]), max(stats_list[[8]])),
-     main = 'Slopes - Class')
-polygon(c(wv, rev(wv)), c(stats_list[[22]], rev(stats_list[[23]])),
-        col = 'grey90',
-        lty = 0)
-for (i in 1:nrow(stats_list[[8]])){
-  lines(wv, stats_list[[8]][i,], col = 'grey' )
-}
-abline(h = 0, lty = 2, col = 'blue')
-lines(wv, stats_list[[19]])
-
-##intercepts
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[18]],
-     type = 'l', 
-     xlab = 'Wavelength (nm)', 
-     ylab = 'Intercept (% reflectance)',
-     ylim = c(min(stats_list[[4]]), max(stats_list[[4]])),
-     main = 'Intercepts - Class')
-polygon(c(wv, rev(wv)), c(stats_list[[20]], rev(stats_list[[21]])),
+polygon(c(wv, rev(wv)), c(stats_list[[18]], rev(stats_list[[19]])),
         col = 'grey90',
         lty = 0)
 for (i in 1:nrow(stats_list[[4]])){
   lines(wv, stats_list[[4]][i,], col = 'grey' )
 }
 abline(h = 0, lty = 2, col = 'blue')
-lines(wv, stats_list[[18]])
+lines(wv, stats_list[[15]])
+
+##intercepts
+wv = seq(400, 2400, 10)
+plot(wv, stats_list[[14]],
+     type = 'l', 
+     xlab = 'Wavelength (nm)', 
+     ylab = 'Intercept (% reflectance)',
+     ylim = c(min(stats_list[[1]]), max(stats_list[[17]])),
+     main = 'Intercepts - Family')
+polygon(c(wv, rev(wv)), c(stats_list[[16]], rev(stats_list[[17]])),
+        col = 'grey90',
+        lty = 0)
+for (i in 1:nrow(stats_list[[1]])){
+  lines(wv, stats_list[[1]][i,], col = 'grey' )
+}
+abline(h = 0, lty = 2, col = 'blue')
+lines(wv, stats_list[[14]])
+
+################################################################################
+#Order
+par(mfrow = c(2,1))
+##slopes
+wv = seq(400, 2400, 10)
+plot(wv, stats_list[[15]],
+     type = 'l', 
+     xlab = 'Wavelength (nm)', 
+     ylab = 'Effect of age (% reflectance/year)',
+     ylim = c(min(stats_list[[18]]), max(stats_list[[19]])),
+     main = 'Slopes - Order')
+polygon(c(wv, rev(wv)), c(stats_list[[18]], rev(stats_list[[19]])),
+        col = 'grey90',
+        lty = 0)
+for (i in 1:nrow(stats_list[[5]])){
+  lines(wv, stats_list[[5]][i,], col = 'grey' )
+}
+abline(h = 0, lty = 2, col = 'blue')
+lines(wv, stats_list[[15]])
+
+##intercepts
+wv = seq(400, 2400, 10)
+plot(wv, stats_list[[14]],
+     type = 'l', 
+     xlab = 'Wavelength (nm)', 
+     ylab = 'Intercept (% reflectance)',
+     ylim = c(min(stats_list[[2]]), max(stats_list[[17]])),
+     main = 'Intercepts - Order')
+polygon(c(wv, rev(wv)), c(stats_list[[16]], rev(stats_list[[17]])),
+        col = 'grey90',
+        lty = 0)
+for (i in 1:nrow(stats_list[[2]])){
+  lines(wv, stats_list[[2]][i,], col = 'grey' )
+}
+abline(h = 0, lty = 2, col = 'blue')
+lines(wv, stats_list[[14]])
+
+################################################################################
+#Class
+par(mfrow = c(2,1))
+##slopes
+wv = seq(400, 2400, 10)
+plot(wv, stats_list[[15]],
+     type = 'l', 
+     xlab = 'Wavelength (nm)', 
+     ylab = 'Effect of age (% reflectance/year)',
+     ylim = c(min(stats_list[[6]]), max(stats_list[[6]])),
+     main = 'Slopes - Class')
+polygon(c(wv, rev(wv)), c(stats_list[[18]], rev(stats_list[[19]])),
+        col = 'grey90',
+        lty = 0)
+for (i in 1:nrow(stats_list[[6]])){
+  lines(wv, stats_list[[6]][i,], col = 'grey' )
+}
+abline(h = 0, lty = 2, col = 'blue')
+lines(wv, stats_list[[15]])
+
+##intercepts
+wv = seq(400, 2400, 10)
+plot(wv, stats_list[[14]],
+     type = 'l', 
+     xlab = 'Wavelength (nm)', 
+     ylab = 'Intercept (% reflectance)',
+     ylim = c(min(stats_list[[16]]), max(stats_list[[3]])),
+     main = 'Intercepts - Class')
+polygon(c(wv, rev(wv)), c(stats_list[[16]], rev(stats_list[[17]])),
+        col = 'grey90',
+        lty = 0)
+for (i in 1:nrow(stats_list[[3]])){
+  lines(wv, stats_list[[3]][i,], col = 'grey' )
+}
+abline(h = 0, lty = 2, col = 'blue')
+lines(wv, stats_list[[14]])
 
 ################################################################################
 #variances
-par(mfrow = c(2,4))
-##Species
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[9]],
-     ylim = c(min(stats_list[[13]]), max(stats_list[[17]])),
-     main = 'Variance - Species',
-     ylab = 'Variance',
-     xlab = 'Wavelength (nm)',
-     col = 'blue',
-     type = 'l')
-lines(wv, stats_list[[13]], col = 'red')
-lines(wv, stats_list[[17]], col = 'gray')
-
-plot(wv, stats_list[[13]], main = 'Slope variance - Species', ylab = 'variance',
-     xlab = 'Wavelength (nm)', type = 'l')
+par(mfrow = c(3,2))
 
 ##Family
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[10]],
-     ylim = c(min(stats_list[[14]]), max(stats_list[[10]])),
+wv = seq(400, 2400, 10)
+plot(wv, stats_list[[7]],
+     ylim = c(0, max(stats_list[[7]])),
      main = 'Variance - Family',
      ylab = 'Variance',
      xlab = 'Wavelength (nm)',
      col = 'blue',
      type = 'l')
-lines(wv, stats_list[[14]], col = 'red')
-lines(wv, stats_list[[17]], col = 'gray')
+lines(wv, stats_list[[10]], col = 'red')
+lines(wv, stats_list[[13]], col = 'gray')
 
-plot(wv, stats_list[[14]], main = 'Slope variance - Family', ylab = 'variance',
+plot(wv, stats_list[[10]], main = 'Slope variance - Family', ylab = 'variance',
      xlab = 'Wavelength (nm)', type = 'l')
 
 ##Order
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[11]],
-     ylim = c(min(stats_list[[15]]), max(stats_list[[17]])),
+wv = seq(400, 2400, 10)
+plot(wv, stats_list[[8]],
+     ylim = c(0, max(stats_list[[13]])),
      main = 'Variance - Order',
      ylab = 'Variance',
      xlab = 'Wavelength (nm)',
      col = 'blue',
      type = 'l')
-lines(wv, stats_list[[15]], col = 'red')
-lines(wv, stats_list[[17]], col = 'gray')
+lines(wv, stats_list[[11]], col = 'red')
+lines(wv, stats_list[[13]], col = 'gray')
 
-plot(wv, stats_list[[15]], main = 'Slope variance - Order', ylab = 'variance',
+plot(wv, stats_list[[11]], main = 'Slope variance - Order', ylab = 'variance',
      xlab = 'Wavelength (nm)', type = 'l')
 
 ##Class
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[12]],
-     ylim = c(min(stats_list[[16]]), max(stats_list[[12]])),
+wv = seq(400, 2400, 10)
+plot(wv, stats_list[[9]],
+     ylim = c(min(stats_list[[9]]), max(stats_list[[9]])),
      main = 'Variance - Class',
      ylab = 'Variance',
      xlab = 'Wavelength (nm)',
      col = 'blue',
      type = 'l')
-lines(wv, stats_list[[16]], col = 'red')
-lines(wv, stats_list[[17]], col = 'gray')
+lines(wv, stats_list[[12]], col = 'red')
+lines(wv, stats_list[[13]], col = 'gray')
 
-plot(wv, stats_list[[16]], main = 'Slope variance - Class', ylab = 'variance',
+plot(wv, stats_list[[12]], main = 'Slope variance - Class', ylab = 'variance',
      xlab = 'Wavelength (nm)', type = 'l')
 
 ##Total slope variance
 par(mfrow = c(1,1))
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[13]],
-     ylim = c(min(stats_list[[13]], stats_list[[14]], stats_list[[15]], stats_list[[16]]),
-              max(stats_list[[13]], stats_list[[14]], stats_list[[15]], stats_list[[16]])),
+wv = seq(400, 2400, 10)
+plot(wv, stats_list[[10]],
+     ylim = c(min(stats_list[[10]], stats_list[[11]], stats_list[[12]]),
+              max(stats_list[[10]], stats_list[[11]], stats_list[[12]])),
      main = 'Variance - Slopes',
      ylab = 'Variance',
      xlab = 'Wavelength (nm)',
      col = '#a6cee3',
      type = 'l')
-lines(wv, stats_list[[14]], col = '#1f78b4')
-lines(wv, stats_list[[15]], col = '#b2df8a')
-lines(wv, stats_list[[16]], col = '#33a02c')
+lines(wv, stats_list[[11]], col = '#1f78b4')
+lines(wv, stats_list[[12]], col = '#b2df8a')
 legend('topright',
-       c('Species', 'Family', 'Order', 'Class'),
-       col = c('#a6cee3', '#1f78b4', '#b2df8a', '#33a02c'), lty = c(1,1,1,1))
+       c('Family', 'Order', 'Class'),
+       col = c('#a6cee3', '#1f78b4', '#b2df8a'), lty = c(1,1,1,1))
 
 ##Total intercept variance
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[9]],
-     ylim = c(min(stats_list[[9]], stats_list[[10]], stats_list[[11]], stats_list[[12]]),
-              max(stats_list[[9]], stats_list[[10]], stats_list[[11]], stats_list[[12]])),
+wv = seq(400, 2400, 10)
+plot(wv, stats_list[[7]],
+     ylim = c(min(stats_list[[7]], stats_list[[8]], stats_list[[9]]),
+              max(stats_list[[7]], stats_list[[8]], stats_list[[9]])),
      main = 'Variance - Intercepts',
      ylab = 'Variance',
      xlab = 'Wavelength (nm)',
      col = '#a6cee3',
      type = 'l')
-lines(wv, stats_list[[10]], col = '#1f78b4')
-lines(wv, stats_list[[11]], col = '#b2df8a')
-lines(wv, stats_list[[12]], col = '#33a02c')
+lines(wv, stats_list[[8]], col = '#1f78b4')
+lines(wv, stats_list[[9]], col = '#b2df8a')
 legend('bottomright',
-       c('Species', 'Family', 'Order', 'Class'),
-       col = c('#a6cee3', '#1f78b4', '#b2df8a', '#33a02c'), lty = c(1,1,1,1))
+       c('Family', 'Order', 'Class'),
+       col = c('#a6cee3', '#1f78b4', '#b2df8a'), lty = c(1,1,1,1))
 
 ##Total variance
 wv = seq(400, 2400, 1)
