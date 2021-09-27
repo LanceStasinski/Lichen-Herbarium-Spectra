@@ -24,7 +24,7 @@ spectra_percent = as_spectra(spec.m)
 meta(spectra_percent) = data
 spec_df = as.data.frame(spectra_percent)
 
-lmm1 = lmer(BoxCox(spec_df[, '700'], lambda = 'auto') ~ age + (age|Class/Order/Family/scientificName),
+lmm1 = lmer(spec_df[, '700'], ~ age + (age|Class/Order/Family/scientificName),
            data = spec_df, REML = T, 
            lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, 
                        optCtrl = list(maxfun = 1e5)))

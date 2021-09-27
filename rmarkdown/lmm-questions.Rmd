@@ -11,14 +11,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Linear Mixed Models - Questions
 
-This document walks through the full process of creating linear mixed models with the lichen spectroscopy data, and the questions I currently have can be found in bold along the way.
+This document walks through the full process of creating linear mixed models with the lichen spectroscopy data, and the 9 questions I currently have can be found in bold along the way.
 
 ## Research Questions
 
 1. How do reflectance measurements taken from a lichen thallus change as lichen specimes age?
   - Do lichen show a general pattern? i.e. Do the underlying traits change in a consistent manner between lichen species, such that only the starting values differentiate species rather than the rates of change for those corresponding traits.
   - Are there differences in the rate of reflectance change between species? I'm not concerned with exactly how each species responds to age.
-2. Where does much of the variation in either the rate of reflectance change or the starting reflectance values arrise? i.e. Does much of the variation occur between species or at higher taxonomic ranks such as class?
+2. Where does much of the variation in either the rate of reflectance change or the starting reflectance values arise? i.e. Does much of the variation occur between species or at higher taxonomic ranks such as class?
 
 Linear mixed models appear to be a good choice for answering these questions.
 
@@ -164,26 +164,20 @@ It looks like the variable intercept - fixed slope model is a better fit for eac
 1. Linearity
 ```{r}
 plot(resid(varInt550), spec_df[, '550'])
-```
-```{r}
 plot(resid(varInt850), spec_df[, '850'])
-```
-```{r}
 plot(resid(varInt550), spec_df[, '1550'])
 ```
+
 
 According to [Michael Palmeri](https://ademos.people.uic.edu/Chapter18.html#61_assumption_1_-_linearity), a plot of random points indicates linearity. These plots look pretty random to me.
 
 2. Homoscedasticity
 ```{r}
 plot(varInt550)
-```
-```{r}
 plot(varInt850)
-```
-```{r}
 plot(varInt1550)
 ```
+
 
 The 550 and 850 models appear to show heteroscedasticity, but the 1500 model looks pretty homoscedastic (sausage shaped). 
 
@@ -198,8 +192,95 @@ qqmath(varInt1550)
 ```
 Not the best, not the worst.
 
+## Variable intercept - variable slope models
+
+Although the previous ANOVAs show the variable intercept - variable slope model to be worse than the variable intercept - variable slope model, I'm still interested if slopes vary between species. I'll add the code and results for assessing assumptions, but feel free to skim this since the results are nearly identical to those present for the variable intercept - fixed slope model.
+
+### Assess model assumptions
+
+1. Linearity
+```{r}
+plot(resid(varSlope550), spec_df[, '550'])
+plot(resid(varSlope850), spec_df[, '850'])
+plot(resid(varSlope550), spec_df[, '1550'])
+```
+Seems pretty random.
+
+2. Homoscedasticity
+```{r}
+plot(varSlope550)
+plot(varSlope850)
+plot(varSlope1550)
+```
+Heteroscedasticity in 550 and 850.
+
+```{r}
+library(lattice)
+qqmath(varInt550)
+qqmath(varInt850)
+qqmath(varInt1550)
+```
+Tails skewed for 550 and 850, ok for 1550.
+
+Overall, these are the same results as for the variable intercept - fixed slope models.
+
+### Interpreting the model summary
+
+Let's just look at the model summary for one model:
+```{r}
+summary(varSlope550)
+```
+The summary states that the fixed effects consist of an intercept of 22.08% reflectance and a slope of -0.072 % reflectance/year. 
+
+**Question 5:** I'm pretty sure slope would be expressed as change in percent reflectance per year. Do you agree with this?
+
+[Gabriela Hajduk](https://ourcodingclub.github.io/tutorials/mixed-models/) explains that variance listed under in the Random effects section is the left over variance that is not explained by the fixed effects. She then states that you can get estimate of the variance explained by random effect by dividing the variance of that random effect by the sum of the random effect variance. In this case, the intercept that varies between species (scientificName) accounts for 64.6/(64.6 + 0.0015) + 23.4) = 73.4% of the variance not explained by the fixed effects.
+
+**Question: 6** Is this how the summary should be interpreted? If so, we see that the random effects slope can vary by a decent amount when compared to the fixed slope, but the variable slope will never account for much of the variance because it should either be expressed in different units or intercept variance and slope variance occur at two different scales. How do I reconcile this?
+
+### Coefficients per species
+
+I can obtain the regression coefficients for each species, but should I trust the estimates considering some species are only represented by a few individuals (low sample size)?
+```{r}
+coef(varSlope550)
+```
+
+## Hierarchical Models
+
+Now I want to know from which taxonomic level much of the variation in slope and intercepts comes from. I have several questions about how to implement this.
+
+**Question 7:** Which of the following models would be correct, if any?
+1. `spec_df[, '550'] ~ age + (1 + age|Class) + (1 + age|Class:Order) + (1 +         age|Class:Order:Family) + (1 + age|Class:Order:Family:scientificName)`
+
+2. `spec_df[, '550'] ~ age + (1 + age|Class) + (1 + age|Class:Order) + (1 +         age|Class:Order:Family)`
+
+3. `spec_df[, '550'] ~ age + (1 + age|Class) + (1 + age|Order) + (1 + age|Family) + (1 +age|scientificName)`
+
+**7a:** Model #1 differs from Model #2 by including species (scientificName) in the model; however, in Biometrics, we were told to leave off the lowest level of replication. Does that make sense here?
+
+**7b:** User Macro on [stackExchange](https://stats.stackexchange.com/q/31634) states that you really should have thorough replication for each combination of interactions. I don't think these data have that. For example, most of the specimens fall into a single class, and many families and orders only contain one species. 
+
+**7c:** If Model #1 or Model #2 is the best option, how do I interpret the interaction terms in the summary?
+```{r}
+summary(lmer(spec_df[, '550'] ~ age + (1 + age|Class) + (1 + age|Class:Order) + (1 +         age|Class:Order:Family) + (1 + age|Class:Order:Family:scientificName),
+           data = spec_df, REML = T, 
+           lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, 
+                       optCtrl = list(maxfun = 1e5))))
+```
+
+
+
+## Final Questions
+
+**Question 8:** What are the most important statistics to report for linear mixed models?
+
+**Question 9:** Are there alternative models I should consider? Bayesian Hierarchical models?
+
 
 ## References
+Hajduk, G.K. (2019). Introduction to linear mixed models. https://ourcodingclub.github.io/tutorials/mixed-models/
+
+Macro (https://stats.stackexchange.com/users/4856/macro), Questions about how random effects are specified in lmer, URL (version: 2013-08-11): https://stats.stackexchange.com/q/31634
 
 Palmeri, M.(n.d.) Chapter 18: Testing the assumptions of multilevel models. https://ademos.people.uic.edu/Chapter18.html#1_preface
 
