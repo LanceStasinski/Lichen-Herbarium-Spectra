@@ -73,57 +73,51 @@ lapply(diff_optims.OK,function(x) x@optinfo$conv$lme4$messages)
 #Compare models
 ################################################################################
 spectra = readRDS('spectra/lichen_spectra.rds')
-spectra = spectra[meta(spectra)$age <= 60, ]
+spectra = normalize(spectra[meta(spectra)$age <= 60, ])
+spectra = aggregate(spectra, meta(spectra)$X, mean, try_keep_txt(mean))
 data = meta(spectra)
 spec.m = as.matrix(spectra) * 100
 spectra_percent = as_spectra(spec.m)
 meta(spectra_percent) = data
 spec_df = as.data.frame(spectra_percent)
 
-full_aic = c()
-sound_aic = c()
-species_aic = c()
+varInt_aic = c()
+varSlope_aic = c()
 
-full_bic = c()
-sound_bic = c()
-species_bic = c()
+varInt_bic = c()
+varSlope_bic = c()
 
 for(i in seq(400, 2400, 10)) {
     x = toString(i)
-    full_hier = lmer(spec_df[, x] ~ age + (age|Class/Order/Family/scientificName),
+   
+    varInt = lmer(spec_df[, x] ~ age + normalization_magnitude + (1|scientificName),
+                    data = spec_df, REML = T, 
+                    lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
+    varInt_aic = append(varInt_aic, AIC(varInt))
+    varInt_bic = append(varInt_bic, BIC(varInt))
+    
+    varSlope = lmer(spec_df[, x] ~ age + normalization_magnitude + (1 + age|scientificName),
                         data = spec_df, REML = T, 
                         lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
-    full_aic = append(full_aic, AIC(full_hier))
-    full_bic = append(full_bic, BIC(full_hier))
-    
-    sound_hier = lmer(spec_df[, x] ~ age + (age|Class/Order/Family),
-                     data = spec_df, REML = T, 
-                     lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
-    sound_aic = append(sound_aic, AIC(sound_hier))
-    sound_bic = append(sound_bic, BIC(sound_hier))
-    
-    species = lmer(spec_df[, x] ~ age + (age|scientificName),
-                        data = spec_df, REML = T, 
-                        lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
-    species_aic = append(species_aic, AIC(species))
-    species_bic = append(species_bic, BIC(species))
+    varSlope_aic = append(varSlope_aic, AIC(varSlope))
+    varSlope_bic = append(varSlope_bic, BIC(varSlope))
 }
 
+tiff(filename = 'figures/paper-figures/aic_comparison-vn-plusMagnitude.tif',
+     width = 8, height = 6, units = 'in', res = 1200)
 wv = seq(400, 2400, 10)
-plot(wv, full_aic, col = 'blue', type = 'l', xlab = 'Wavelength (nm)', ylab = 'AIC')
-lines(wv, sound_aic, col = 'red')
-lines(wv, species_aic, col = 'black')
+plot(wv, varInt_aic, col = 'blue', type = 'l', xlab = 'Wavelength (nm)', ylab = 'AIC')
+lines(wv, varSlope_aic, col = 'red')
 legend('bottomright',
-       c('Full', 'Sound', 'Species'),
-       col = c('blue', 'red', 'black'), lty = c(1,1))
+       c('variable intercept', 'variable slope'),
+       col = c('blue', 'red'), lty = c(1,1))
+dev.off()
 
-wv = seq(400, 2400, 10)
-plot(wv, full_bic, col = 'blue', type = 'l', xlab = 'Wavelength (nm)', ylab = 'BIC')
-lines(wv, sound_bic, col = 'red')
-lines(wv, species_bic, col = 'black')
+plot(wv, varInt_bic, col = 'blue', type = 'l', xlab = 'Wavelength (nm)', ylab = 'BIC')
+lines(wv, varSlope_bic, col = 'red')
 legend('bottomright',
-       c('Full', 'Sound', 'Species'),
-       col = c('blue', 'red', 'black'), lty = c(1,1))
+       c('variable intercept', 'variable slope'),
+       col = c('blue', 'red'), lty = c(1,1))
 
 ################################################################################
 # Species as a random effect
