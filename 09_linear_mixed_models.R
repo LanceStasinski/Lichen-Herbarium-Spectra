@@ -73,9 +73,18 @@ lapply(diff_optims.OK,function(x) x@optinfo$conv$lme4$messages)
 #Compare models
 ################################################################################
 spectra = readRDS('spectra/lichen_spectra.rds')
-spectra = normalize(spectra[meta(spectra)$age <= 60, ])
+spectra = spectra[meta(spectra)$age <= 60, ]
 spectra = aggregate(spectra, meta(spectra)$X, mean, try_keep_txt(mean))
-spec_df = as.data.frame(spectra)
+data = meta(spectra)
+spec.m = as.matrix(spectra) * 100
+spectra_percent = as_spectra(spec.m)
+
+vn_spectra = normalize(spectra)
+data$normalization_magnitude = meta(vn_spectra)$normalization_magnitude
+
+meta(spectra_percent) = data
+spec_df = as.data.frame(spectra_percent)
+
 
 
 m1_aic = c()
@@ -87,34 +96,202 @@ m2_bic = c()
 for(i in seq(400, 2400, 10)) {
     x = toString(i)
    
-    m1 = lmer(spec_df[, x] ~ age + (1|scientificName),
+    m1 = lmer(spec_df[, x] ~ age + normalization_magnitude + (1|scientificName),
                     data = spec_df, REML = T, 
                     lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
     m1_aic = append(m1_aic, AIC(m1))
     m1_bic = append(m1_bic, BIC(m1))
     
-    m2 = lmer(spec_df[, x] ~ age + normalization_magnitude + (1|scientificName),
+    m2 = lmer(spec_df[, x] ~ age + normalization_magnitude + (1 + age|scientificName),
                         data = spec_df, REML = T, 
                         lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
     m2_aic = append(m2_aic, AIC(m2))
     m2_bic = append(m2_bic, BIC(m2))
 }
 
-#tiff(filename = 'figures/paper-figures/aic_comparison-vn-plusMagnitude.tif',
-    # width = 8, height = 6, units = 'in', res = 1200)
+aic_dif = m1_aic - m2_aic
+
+jpeg(filename = '../../lichen figures/aic_comparision_normalization-raw-spec.jpeg',
+     width = 8, height = 6, units = 'in', res = 1200)
 wv = seq(400, 2400, 10)
-plot(wv, m1_aic, col = 'blue', type = 'l', xlab = 'Wavelength (nm)', ylab = 'AIC')
-lines(wv, m2_aic, col = 'red')
-legend('bottomright',
-       c('M1', 'M2'),
-       col = c('blue', 'red'), lty = c(1,1))
-#dev.off()
+plot(wv, aic_dif, type = 'l', xlab = 'Wavelength (nm)', ylab = '∆AIC', 
+     main = 'No normalization magnitude AIC minus with normalization magnitude AIC')
+abline(h=0, col = 'blue', lty = 2)
+rect(0, -2, 2500, 2,
+        col = rgb(red= 0, green=0, 
+                  blue=0, alpha=0.1),
+        lty = 0)
+dev.off()
 
 plot(wv, m1_bic, col = 'blue', type = 'l', xlab = 'Wavelength (nm)', ylab = 'BIC')
 lines(wv, m2_bic, col = 'red')
 legend('bottomright',
        c('M1', 'M2'),
        col = c('blue', 'red'), lty = c(1,1))
+
+################################################################################
+# Species as a random effect - with normalization magnitude
+################################################################################
+spectra = readRDS('spectra/lichen_spectra.rds')
+spectra = spectra[meta(spectra)$age <= 60, ]
+spectra = aggregate(spectra, meta(spectra)$X, mean, try_keep_txt(mean))
+data = meta(spectra)
+spec.m = as.matrix(spectra) * 100
+spectra_percent = as_spectra(spec.m)
+vn_spectra = normalize(spectra)
+data$normalization_magnitude = meta(vn_spectra)$normalization_magnitude
+meta(spectra_percent) = data
+spec_df = as.data.frame(spectra_percent)
+
+
+ranIntercepts = as.data.frame(matrix(nrow = 29))
+rownames(ranIntercepts) = sort(unique(spec_df$scientificName))
+
+
+intercept_variance = c()
+resid_variance = c()
+psuedoR2 = c()
+
+fixed_intercept_list = c()
+fixed_age_list = c()
+fixed_normMag_list = c()
+
+intercept_2.5_list = c()
+intercept_97.5_list = c()
+age_97.5_list = c()
+age_2.5_list = c()
+normMag_2.5_list = c()
+normMag_97.5_list = c()
+
+
+for(i in seq(400, 2400, 1)) {
+  x = toString(i)
+  lmm = lmer(spec_df[, x] ~ age + normalization_magnitude + (1|scientificName),
+             data = spec_df, REML = T, 
+             lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
+  
+  coefs = coef(lmm)
+  ranIntercepts = cbind(ranIntercepts, coefs[[1]][,1])
+  
+  variances = as.data.frame(VarCorr(lmm))
+  intercept_variance = append(intercept_variance, variances[1,4])
+  resid_variance = append(resid_variance, variances[2,4])
+  psuedoR2 = append(psuedoR2, (variances[1,4]/(variances[1,4] + variances[2,4])))
+  
+  fixed_intercept_list = append(fixed_intercept_list, as.numeric(fixef(lmm)[1]))
+  fixed_age_list = append(fixed_age_list, as.numeric(fixef(lmm)[2]))
+  fixed_normMag_list = append(fixed_normMag_list, as.numeric(fixef(lmm)[3]))
+  
+  ci = confint(lmm)
+  intercept_2.5_list = append(intercept_2.5_list, ci[3])
+  intercept_97.5_list = append(intercept_97.5_list, ci[8])
+  age_2.5_list = append(age_2.5_list, ci[4])
+  age_97.5_list = append(age_97.5_list, ci[9])
+  normMag_2.5_list = append(normMag_2.5_list, ci[5])
+  normMag_97.5_list = append(normMag_97.5_list, ci[10])
+}
+
+stats_list = list()
+
+ranIntercepts = ranIntercepts[,-1]
+colnames(ranIntercepts) = seq(400,2400, 1)
+
+
+stats_list = list.append(stats_list, ranIntercepts) #1
+stats_list = list.append(stats_list, intercept_variance) #2
+stats_list = list.append(stats_list, resid_variance) #3
+stats_list = list.append(stats_list, psuedoR2) #4
+stats_list = list.append(stats_list, fixed_intercept_list) #5
+stats_list = list.append(stats_list, fixed_age_list) #6
+stats_list = list.append(stats_list, fixed_normMag_list) #7
+stats_list = list.append(stats_list, intercept_2.5_list) #8
+stats_list = list.append(stats_list, intercept_97.5_list) #9
+stats_list = list.append(stats_list, age_2.5_list) #10
+stats_list = list.append(stats_list, age_97.5_list) #11
+stats_list = list.append(stats_list, normMag_2.5_list) #12
+stats_list = list.append(stats_list, normMag_97.5_list) #13
+
+saveRDS(stats_list, 'models/lmms/lmm_60yrs_fixedSlope_normMag.rds')
+
+
+###############################
+#Plot
+###############################
+
+stats_list = readRDS('models/lmms/lmm_60yrs_fixedSlope_normMag.rds')
+
+jpeg(filename = '../../lichen figures/fixedSlope_results_normMag.jpeg',
+     width = 12, height = 8, units = 'in', res = 1200)
+par(mfrow = c(2,3))
+#slopes - age
+wv = seq(400, 2400, 1)
+plot(wv, stats_list[[6]],
+     type = 'l', 
+     xlab = 'Wavelength (nm)', 
+     ylab = '% reflectance / year',
+     ylim = c(min(stats_list[[10]]), max(stats_list[[11]])),
+     main = 'Effect of age')
+polygon(c(wv, rev(wv)), c(stats_list[[10]], rev(stats_list[[11]])),
+        col = 'grey90',
+        lty = 0)
+abline(h = 0, lty = 2, col = 'blue')
+lines(wv, stats_list[[6]])
+
+#slopes - normMag
+wv = seq(400, 2400, 1)
+plot(wv, stats_list[[7]],
+     type = 'l', 
+     xlab = 'Wavelength (nm)', 
+     ylab = 'Reflectance / unit normalization magnitude)',
+     ylim = c(min(stats_list[[12]]), max(stats_list[[13]])),
+     main = 'Effect of normalization magnitude')
+polygon(c(wv, rev(wv)), c(stats_list[[12]], rev(stats_list[[13]])),
+        col = 'grey90',
+        lty = 0)
+abline(h = 0, lty = 2, col = 'blue')
+lines(wv, stats_list[[7]])
+
+#intercepts
+wv = seq(400, 2400, 1)
+plot(wv, stats_list[[5]],
+     type = 'l', 
+     xlab = 'Wavelength (nm)', 
+     ylab = '% reflectance',
+     ylim = c(min(stats_list[[1]]), max(stats_list[[1]])),
+     main = 'Intercepts')
+polygon(c(wv, rev(wv)), c(stats_list[[8]], rev(stats_list[[9]])),
+        col = 'grey90',
+        lty = 0)
+for (i in 1:nrow(stats_list[[1]])){
+  lines(wv, stats_list[[1]][i,], col = 'grey' )
+}
+abline(h = 0, lty = 2, col = 'blue')
+lines(wv, stats_list[[5]])
+
+#variances
+wv = seq(400, 2400, 1)
+plot(wv, stats_list[[2]],
+     ylim = c(min(stats_list[[2]]), max(stats_list[[2]])),
+     main = 'Random effects variance',
+     ylab = 'Variance',
+     xlab = 'Wavelength (nm)',
+     col = 'blue',
+     type = 'l')
+lines(wv, stats_list[[3]], col = 'gray')
+legend('topright',
+       c('Intercept', 'Residual'),
+       col = c('blue', 'gray'), lty = c(1,1,1))
+
+#Random Variance explained
+wv = seq(400, 2400, 1)
+plot(wv, stats_list[[4]],
+     ylim = range(stats_list[[4]]),
+     main = 'Random effects variance explained by species',
+     ylab = 'Proportion of variance explained',
+     xlab = 'Wavelength (nm)',
+     type = 'l')
+
+dev.off()
 
 ################################################################################
 # Species as a random effect - no vector normalization
@@ -195,7 +372,7 @@ saveRDS(stats_list, 'models/lmms/lmm_60yrs_fixedSlope.rds')
 
 stats_list = readRDS('models/lmms/lmm_60yrs_fixedSlope.rds')
 
-tiff(filename = 'figures/paper-figures/fixedSlope_results.tif',
+jpeg(filename = '../../lichen figures/fixedSlope_results.jpeg',
  width = 10, height = 8, units = 'in', res = 1200)
 par(mfrow = c(2,2))
 #slopes
@@ -284,7 +461,7 @@ normMag_97.5_list = c()
 
 for(i in seq(400, 2400, 1)) {
   x = toString(i)
-  lmm = lmer(spec_df[, x] ~ age + normalization_magnitude + (1|scientificName),
+  lmm = lmer(spec_df[, '700'] ~ age + normalization_magnitude + (1|scientificName),
              data = spec_df, REML = T, 
              lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
   
@@ -338,7 +515,7 @@ saveRDS(stats_list, 'models/lmms/lmm_60yrs_fixedSlope_vn.rds')
 
 stats_list = readRDS('models/lmms/lmm_60yrs_fixedSlope_vn.rds')
 
-tiff(filename = 'figures/paper-figures/fixedSlope_results_vn.tif',
+jpeg(filename = '../../lichen figures/fixedSlope_results_vn.jpeg',
      width = 12, height = 8, units = 'in', res = 1200)
 par(mfrow = c(2,3))
 #slopes - age
