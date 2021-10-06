@@ -24,7 +24,7 @@ pls = classify(spectra = spectra,
 
 saveRDS(pls, 'models/class_age.rds')
 
-pls = readRDS('models/family.rds')
+pls = readRDS('models/class_age.rds')
 ################################################################################
 #Assess accuracy and kappa
 ################################################################################
@@ -114,6 +114,8 @@ mtext("Prediction", side = 3, cex = 2.5, at = 2, line = 3)
 ################################################################################
 vip_to_spec = function(x){
   t.vip = t(x[,-1])
+  t.vip = as.data.frame(t.vip)
+  names(t.vip)[names(t.vip) == 'age'] = 2401
   colnames(t.vip) <- gsub("`", "", colnames(t.vip))
   s.vip = as_spectra(t.vip)
   plot(mean(s.vip), lwd = 1.5, lty = 1, ylim = c(0, 100),
@@ -123,9 +125,11 @@ vip_to_spec = function(x){
                 border = FALSE, add = TRUE)
 }
 
+jpeg(filename = '../../lichen figures/class_age_vip.jpeg',
+     width = 12, height = 10, units = 'in', res = 1200)
 vip.list = pls[[1]]
 par(mfrow = c(2,3))
 for (j in 1:length(vip.list)) {
   vip_to_spec(vip.list[[j]])
 }
-
+dev.off()
