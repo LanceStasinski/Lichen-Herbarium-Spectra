@@ -75,18 +75,19 @@ lapply(diff_optims.OK,function(x) x@optinfo$conv$lme4$messages)
 ################################################################################
 spectra = readRDS('spectra/lichen_spectra.rds')
 spectra = spectra[meta(spectra)$age <= 60, ]
-spectra = normalize(spectra)
+#spectra = normalize(spectra)
 spectra = aggregate(spectra, meta(spectra)$X, mean, try_keep_txt(mean))
 spec_df = as.data.frame(spectra)
-#data = meta(spectra)
-#spec.m = as.matrix(spectra) * 100
-#spectra_percent = as_spectra(spec.m)
+data = meta(spectra)
+spec.m = as.matrix(spectra) * 100
+spectra_percent = as_spectra(spec.m)
 
-#vn_spectra = normalize(spectra)
-#data$normalization_magnitude = meta(vn_spectra)$normalization_magnitude
+vn_spectra = normalize(spectra_percent)
+vn_spec_df = as.data.frame(vn_spectra)
+data$normalization_magnitude = meta(vn_spectra)$normalization_magnitude
 
-#meta(spectra_percent) = data
-#spec_df = as.data.frame(spectra_percent)
+meta(spectra_percent) = data
+spec_df = as.data.frame(spectra_percent)
 
 
 
@@ -99,13 +100,13 @@ m2_bic = c()
 for(i in seq(400, 2400, 1)) {
     x = toString(i)
    
-    m1 = lmer(spec_df[, '1700'] ~ age + (1|scientificName),
+    m1 = lmer(spec_df[, '1700'] ~ age + normalization_magnitude + (1|scientificName),
                     data = spec_df, REML = T, 
                     lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
     m1_aic = append(m1_aic, AIC(m1))
     m1_bic = append(m1_bic, BIC(m1))
     
-    m2 = lmer(spec_df[, x] ~ age + (1 + age|scientificName),
+    m2 = lmer(vn_spec_df[, '1700'] ~ age + (1|scientificName),
                         data = spec_df, REML = T, 
                         lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
     m2_aic = append(m2_aic, AIC(m2))
@@ -334,7 +335,6 @@ spec_df = as.data.frame(spectra_percent)
 ranIntercepts = as.data.frame(matrix(nrow = 29))
 rownames(ranIntercepts) = sort(unique(spec_df$scientificName))
 
-
 intercept_variance = c()
 resid_variance = c()
 psuedoR2 = c()
@@ -349,6 +349,22 @@ age_97.5_list = c()
 age_2.5_list = c()
 normMag_2.5_list = c()
 normMag_97.5_list = c()
+
+condR2 = c()
+condR2_lower = c()
+condR2_upper = c()
+
+marR2 = c()
+marR2_lower = c()
+marR2_upper = c()
+
+ageR2 = c()
+ageR2_lower = c()
+ageR2_upper = c()
+
+normMagR2 = c()
+normMagR2_lower = c()
+normMagR2_upper = c()
 
 
 for(i in seq(400, 2400, 1)) {
@@ -376,6 +392,23 @@ for(i in seq(400, 2400, 1)) {
   age_97.5_list = append(age_97.5_list, ci[9])
   normMag_2.5_list = append(normMag_2.5_list, ci[5])
   normMag_97.5_list = append(normMag_97.5_list, ci[10])
+  
+  cond = partR2(lmm, R2_type = 'conditional', nboot = 10)
+  mar = partR2(lmm, partvars = c('age', 'normalization_magnitude'),
+               R2_type = 'marginal', nboot = 10)
+  
+  condR2 = append(condR2, cond$R2$estimate)
+  condR2_lower = append(condR2_lower, cond$R2$CI_lower)
+  condR2_upper = append(condR2_upper, cond$R2$CI_upper)
+  marR2 = append(marR2, mar$R2$estimate[1])
+  marR2_lower = append(marR2_lower, mar$R2$CI_lower[1])
+  marR2_upper = append(marR2_upper, mar$R2$CI_upper[1])
+  ageR2 = append(ageR2, mar$R2$estimate[2])
+  ageR2_lower = append(ageR2_lower, mar$R2$CI_lower[2])
+  ageR2_upper = append(ageR2_upper, mar$R2$CI_upper[2])
+  normMagR2 = append(normMagR2, mar$R2$estimate[3])
+  normMagR2_lower = append(normMagR2_lower, mar$R2$CI_lower[3])
+  normMagR2_upper = append(normMagR2_upper, mar$R2$CI_upper[3])
 }
 
 stats_list = list()
@@ -397,6 +430,18 @@ stats_list = list.append(stats_list, age_2.5_list) #10
 stats_list = list.append(stats_list, age_97.5_list) #11
 stats_list = list.append(stats_list, normMag_2.5_list) #12
 stats_list = list.append(stats_list, normMag_97.5_list) #13
+stats_list = list.append(stats_list, condR2) #14
+stats_list = list.append(stats_list, condR2_lower) #15
+stats_list = list.append(stats_list, condR2_upper) #16
+stats_list = list.append(stats_list, marR2) #17
+stats_list = list.append(stats_list, marR2_lower) #18
+stats_list = list.append(stats_list, marR2_upper) #19
+stats_list = list.append(stats_list, ageR2) #20
+stats_list = list.append(stats_list, ageR2_lower) #21
+stats_list = list.append(stats_list, ageR2_upper) #22
+stats_list = list.append(stats_list, normMagR2) #23
+stats_list = list.append(stats_list, normMagR2_lower) #24
+stats_list = list.append(stats_list, normMagR2_upper) #25
 
 saveRDS(stats_list, 'models/lmms/lmm_60yrs_fixedSlope_normMag.rds')
 
@@ -407,9 +452,9 @@ saveRDS(stats_list, 'models/lmms/lmm_60yrs_fixedSlope_normMag.rds')
 
 stats_list = readRDS('models/lmms/lmm_60yrs_fixedSlope_normMag.rds')
 
-jpeg(filename = '../../lichen figures/fixedSlope_results_normMag.jpeg',
-     width = 12, height = 8, units = 'in', res = 1200)
-par(mfrow = c(2,3))
+jpeg(filename = '../../lichen figures/fixedSlope_results_withNormMag_R2.jpeg',
+     width = 8, height = 8, units = 'in', res = 1200)
+par(mfrow = c(3,2))
 #slopes - age
 wv = seq(400, 2400, 1)
 plot(wv, stats_list[[6]],
@@ -425,18 +470,18 @@ abline(h = 0, lty = 2, col = 'blue')
 lines(wv, stats_list[[6]])
 
 #slopes - normMag
-wv = seq(400, 2400, 1)
-plot(wv, stats_list[[7]],
-     type = 'l', 
-     xlab = 'Wavelength (nm)', 
-     ylab = 'Reflectance / unit normalization magnitude)',
-     ylim = c(min(stats_list[[12]]), max(stats_list[[13]])),
-     main = 'Effect of normalization magnitude')
-polygon(c(wv, rev(wv)), c(stats_list[[12]], rev(stats_list[[13]])),
-        col = 'grey90',
-        lty = 0)
-abline(h = 0, lty = 2, col = 'blue')
-lines(wv, stats_list[[7]])
+#wv = seq(400, 2400, 1)
+#plot(wv, stats_list[[7]],
+#     type = 'l', 
+#     xlab = 'Wavelength (nm)', 
+#     ylab = 'Reflectance / unit normalization magnitude)',
+#     ylim = c(min(stats_list[[12]]), max(stats_list[[13]])),
+#     main = 'Effect of normalization magnitude')
+#polygon(c(wv, rev(wv)), c(stats_list[[12]], rev(stats_list[[13]])),
+#        col = 'grey90',
+#        lty = 0)
+#abline(h = 0, lty = 2, col = 'blue')
+#lines(wv, stats_list[[7]])
 
 #intercepts
 wv = seq(400, 2400, 1)
@@ -446,16 +491,59 @@ plot(wv, stats_list[[5]],
      ylab = '% reflectance',
      ylim = c(min(stats_list[[1]]), max(stats_list[[1]])),
      main = 'Intercepts')
-polygon(c(wv, rev(wv)), c(stats_list[[8]], rev(stats_list[[9]])),
-        col = 'grey90',
-        lty = 0)
+
 for (i in 1:nrow(stats_list[[1]])){
   lines(wv, stats_list[[1]][i,], col = 'grey' )
 }
+polygon(c(wv, rev(wv)), c(stats_list[[8]], rev(stats_list[[9]])),
+        col = rgb(0,0,1,0.2),
+        lty = 0)
 abline(h = 0, lty = 2, col = 'blue')
-lines(wv, stats_list[[5]])
+lines(wv, stats_list[[5]], col = rgb(0,0,1,1))
 
-#variances
+#marginal and conditional variances
+wv = seq(400, 2400, 1)
+plot(wv, stats_list[[14]],
+     type = 'l',
+     col = rgb(0,0,1,1),
+     xlab = 'Wavelength (nm)',
+     ylab = 'R-squared',
+     ylim = c(0,1),
+     main = 'Conditional and Marginal R-squared')
+polygon(c(wv, rev(wv)), c(stats_list[[15]], rev(stats_list[[16]])),
+        col = rgb(0,0,1, 0.2),
+        lty = 0)
+lines(wv, stats_list[[17]], col = rgb(1,0,0,1))
+polygon(c(wv, rev(wv)), c(stats_list[[18]], rev(stats_list[[19]])),
+        col = rgb(1,0,0, 0.2),
+        lty = 0)
+legend('bottomright',
+       c('Conditional R2', 'Marginal R2'),
+       col = c(rgb(0,0,1,1), rgb(1,0,0,1)), lty = c(1,1))
+
+#partial R2 - marginal
+wv = seq(400, 2400, 1)
+plot(wv, stats_list[[20]],
+     type = 'l',
+     col = rgb(90/256,180/256,17/2562,1),
+     xlab = 'Wavelength (nm)',
+     ylab = 'R-squared',
+     ylim = c(0,1),
+     main = 'Partial R-squared')
+polygon(c(wv, rev(wv)), c(stats_list[[21]], rev(stats_list[[22]])),
+        col = rgb(90/256,180/256,172/256, 0.2),
+        lty = 0)
+lines(wv, stats_list[[23]], col = rgb(216/256,179/256,101/256,1))
+polygon(c(wv, rev(wv)), c(stats_list[[24]], rev(stats_list[[25]])),
+        col = rgb(216/256,179/256,101/256, 0.2),
+        lty = 0)
+legend('right',
+       c('Age R2', 'Normalization magnitude R2'),
+       col = c(rgb(90/256,180/256,172/256,1), rgb(216/256,179/256,101/256,1)),
+       lty = c(1,1))
+
+
+#Random variances
 wv = seq(400, 2400, 1)
 plot(wv, stats_list[[2]],
      ylim = c(min(stats_list[[2]]), max(stats_list[[2]])),
@@ -799,8 +887,18 @@ partR2(lmm, data = spec_df, R2_type = "marginal", nboot = 10)
 partR2(lmm, data = spec_df, R2_type = "conditional", nboot = 10)
 
 #plot
+coefs = coef(lmm)
 
-plot()
+jpeg(filename = '../../lichen figures/normMag-age_allspecies.jpeg',
+     width = 9, height = 8, units = 'in', res = 1200)
+plot(spec_df$age, spec_df$normalization_magnitude, ylab = 'Normalization Magnitude',
+     xlab = ' Age')
+for (i in 1:29) {
+  abline(coefs$scientificName$`(Intercept)`[i], coefs$scientificName$age[i],
+         col = 'gray50')
+}
+abline(fixef(lmm)[1], fixef(lmm)[2], col = 'blue', lwd = 2)
+dev.off()
 
 library(ggeffects)
 pred <- ggpredict(lmm, terms = c("age"))
