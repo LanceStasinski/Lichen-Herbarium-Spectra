@@ -82,9 +82,9 @@ data = meta(spectra)
 spec.m = as.matrix(spectra) * 100
 spectra_percent = as_spectra(spec.m)
 
-vn_spectra = normalize(spectra_percent)
-vn_spec_df = as.data.frame(vn_spectra)
-data$normalization_magnitude = meta(vn_spectra)$normalization_magnitude
+#vn_spectra = normalize(spectra_percent)
+#vn_spec_df = as.data.frame(vn_spectra)
+#data$normalization_magnitude = meta(vn_spectra)$normalization_magnitude
 
 meta(spectra_percent) = data
 spec_df = as.data.frame(spectra_percent)
@@ -100,13 +100,13 @@ m2_bic = c()
 for(i in seq(400, 2400, 1)) {
     x = toString(i)
    
-    m1 = lmer(spec_df[, '1700'] ~ age + normalization_magnitude + (1|scientificName),
+    m1 = lmer(spec_df[, x] ~ age  + (1|scientificName),
                     data = spec_df, REML = T, 
                     lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
     m1_aic = append(m1_aic, AIC(m1))
     m1_bic = append(m1_bic, BIC(m1))
     
-    m2 = lmer(vn_spec_df[, '1700'] ~ age + (1|scientificName),
+    m2 = lmer(spec_df[, x] ~ age + (1 + age|scientificName),
                         data = spec_df, REML = T, 
                         lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
     m2_aic = append(m2_aic, AIC(m2))
@@ -115,12 +115,12 @@ for(i in seq(400, 2400, 1)) {
 
 aic_dif = m1_aic - m2_aic
 
-jpeg(filename = '../../lichen figures/aic_comparision_fixed-slope_minus_var-slope_vn.jpeg',
+jpeg(filename = '../../lichen figures/aic_comparision_fixed-slope_minus_var-slope_noNorm.jpeg',
      width = 8, height = 6, units = 'in', res = 1200)
 par(mfrow = c(1,1))
 wv = seq(400, 2400, 1)
 plot(wv, aic_dif, type = 'l', xlab = 'Wavelength (nm)', ylab = '∆AIC', 
-     main = 'Fixed-slope AIC minus variable-slope AIC - Normalized')
+     main = 'Fixed-slope AIC minus variable-slope AIC')
 abline(h=0, col = 'blue', lty = 2)
 rect(0, -2, 2500, 2,
         col = rgb(red= 0, green=0, 
@@ -596,6 +596,13 @@ intercept_97.5_list = c()
 slope_97.5_list = c()
 slope_2.5_list = c()
 
+condR2 = c()
+condR2_lower = c()
+condR2_upper = c()
+
+marR2 = c()
+marR2_lower = c()
+marR2_upper = c()
 
 for(i in seq(400, 2400, 1)) {
     x = toString(i)
@@ -619,6 +626,16 @@ for(i in seq(400, 2400, 1)) {
     intercept_97.5_list = append(intercept_97.5_list, ci[7])
     slope_2.5_list = append(slope_2.5_list, ci[4])
     slope_97.5_list = append(slope_97.5_list, ci[8])
+    
+    cond = partR2(lmm, R2_type = 'conditional', nboot = 10)
+    mar = partR2(lmm, R2_type = 'marginal', nboot = 10)
+    
+    condR2 = append(condR2, cond$R2$estimate)
+    condR2_lower = append(condR2_lower, cond$R2$CI_lower)
+    condR2_upper = append(condR2_upper, cond$R2$CI_upper)
+    marR2 = append(marR2, mar$R2$estimate[1])
+    marR2_lower = append(marR2_lower, mar$R2$CI_lower)
+    marR2_upper = append(marR2_upper, mar$R2$CI_upper)
 }
 
 stats_list = list()
@@ -637,6 +654,12 @@ stats_list = list.append(stats_list, intercept_2.5_list) #7
 stats_list = list.append(stats_list, intercept_97.5_list) #8
 stats_list = list.append(stats_list, slope_2.5_list) #9
 stats_list = list.append(stats_list, slope_97.5_list) #10
+stats_list = list.append(stats_list, condR2) #11
+stats_list = list.append(stats_list, condR2_lower) #12
+stats_list = list.append(stats_list, condR2_upper) #13
+stats_list = list.append(stats_list, marR2) #14
+stats_list = list.append(stats_list, marR2_lower) #15
+stats_list = list.append(stats_list, marR2_upper) #16
 
 saveRDS(stats_list, 'models/lmms/lmm_60yrs_fixedSlope.rds')
 
@@ -647,9 +670,9 @@ saveRDS(stats_list, 'models/lmms/lmm_60yrs_fixedSlope.rds')
 
 stats_list = readRDS('models/lmms/lmm_60yrs_fixedSlope.rds')
 
-jpeg(filename = '../../lichen figures/fixedSlope_results.jpeg',
- width = 10, height = 8, units = 'in', res = 1200)
-par(mfrow = c(2,2))
+jpeg(filename = '../../lichen figures/fixedSlope_results_noNorm.jpeg',
+ width = 8, height = 12, units = 'in', res = 1200)
+par(mfrow = c(3,2))
 #slopes
 wv = seq(400, 2400, 1)
 plot(wv, stats_list[[6]],
@@ -672,14 +695,35 @@ plot(wv, stats_list[[5]],
      ylab = 'Intercept (% reflectance)',
      ylim = c(min(stats_list[[1]]), max(stats_list[[1]])),
      main = 'Intercepts')
-polygon(c(wv, rev(wv)), c(stats_list[[7]], rev(stats_list[[8]])),
-        col = 'grey90',
-        lty = 0)
 for (i in 1:nrow(stats_list[[1]])){
   lines(wv, stats_list[[1]][i,], col = 'grey' )
 }
+polygon(c(wv, rev(wv)), c(stats_list[[7]], rev(stats_list[[8]])),
+        col = rgb(0,0,1,0.2),
+        lty = 0)
 abline(h = 0, lty = 2, col = 'blue')
-lines(wv, stats_list[[5]])
+lines(wv, stats_list[[5]], col = rgb(0,0,0,1))
+
+#marginal and conditional variances
+wv = seq(400, 2400, 1)
+plot(wv, stats_list[[11]],
+     type = 'l',
+     col = rgb(0,0,1,1),
+     xlab = 'Wavelength (nm)',
+     ylab = 'Proportion of variance explained',
+     ylim = c(0,1),
+     main = 'R-squared')
+polygon(c(wv, rev(wv)), c(stats_list[[12]], rev(stats_list[[13]])),
+        col = rgb(0,0,1, 0.2),
+        lty = 0)
+lines(wv, stats_list[[14]], col = rgb(1,0,0,1))
+polygon(c(wv, rev(wv)), c(stats_list[[15]], rev(stats_list[[16]])),
+        col = rgb(1,0,0, 0.2),
+        lty = 0)
+legend('topright',
+       c('Conditional R2', 'Marginal R2'),
+       col = c(rgb(0,0,1,1), rgb(1,0,0,1)), lty = c(1,1))
+
 
 #variances
 wv = seq(400, 2400, 1)
