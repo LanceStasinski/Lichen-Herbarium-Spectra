@@ -930,18 +930,34 @@ AIC(lmm2)
 partR2(lmm, data = spec_df, R2_type = "marginal", nboot = 10)
 partR2(lmm, data = spec_df, R2_type = "conditional", nboot = 10)
 
+#####################################
 #plot
+#####################################
+
+#Colors
+library(RColorBrewer)
+col_pal = brewer.pal.info[brewer.pal.info$category == 'qual',]
+col_vector = unlist(mapply(brewer.pal, col_pal$maxcolors, rownames(col_pal)))
+cols = sample(col_vector, 29)
+spec_df$color = 'black'
+species = sort(unique(spec_df$scientificName))
+
+for (i in 1:length(species)) {
+  spec_df$color[spec_df$scientificName == species[i]] = cols[i]
+}
+
+
 coefs = coef(lmm)
 
-jpeg(filename = '../../lichen figures/normMag-age_allspecies.jpeg',
+jpeg(filename = '../../lichen figures/normMag-age_allspecies_color.jpeg',
      width = 9, height = 8, units = 'in', res = 1200)
 plot(spec_df$age, spec_df$normalization_magnitude, ylab = 'Normalization Magnitude',
-     xlab = ' Age')
+     xlab = ' Age', col = spec_df$color, pch = 16)
 for (i in 1:29) {
   abline(coefs$scientificName$`(Intercept)`[i], coefs$scientificName$age[i],
-         col = 'gray50')
+         col = cols[i])
 }
-abline(fixef(lmm)[1], fixef(lmm)[2], col = 'blue', lwd = 2)
+abline(fixef(lmm)[1], fixef(lmm)[2], col = 'black', lwd = 3)
 dev.off()
 
 library(ggeffects)
