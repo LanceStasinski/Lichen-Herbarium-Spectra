@@ -24,7 +24,7 @@ pls = classify(spectra = spectra,
 
 saveRDS(pls, 'models/class_age.rds')
 
-pls = readRDS('models/class_age.rds')
+pls = readRDS('models/class.rds')
 ################################################################################
 #Assess accuracy and kappa
 ################################################################################
@@ -97,14 +97,21 @@ write.csv(cm.total, "figures/confusion_matrices/cm_csv/class_age.csv")
 #plot confusion matrix
 cols = colorRampPalette(c('white', '#fe9929'))
 
+jpeg(filename = '../../lichen figures/class_corrplot.jpeg',
+     width = 6, height = 6, units = 'in', res = 1200)
 par(mfrow = c(1,1))
 corrplot::corrplot(as.matrix(cm.total),
+                   cl.pos = 'n',
                    method = 'square',
                    tl.col = 'black',
                    cl.lim = c(0,1),
                    na.label = 'square',
                    na.label.col = 'white',
+                   addCoef.col = '#542788',
+                   number.digits = 2,
+                   number.cex = 1,
                    col = cols(10))
+dev.off()
 
 mtext("Reference", side = 2, line = -8, cex = 2.5)
 mtext("Prediction", side = 3, cex = 2.5, at = 2, line = 3)

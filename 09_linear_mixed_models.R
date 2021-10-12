@@ -106,7 +106,7 @@ for(i in seq(400, 2400, 1)) {
     m1_aic = append(m1_aic, AIC(m1))
     m1_bic = append(m1_bic, BIC(m1))
     
-    m2 = lmer(spec_df[, x] ~ age + (1 + age|scientificName),
+    m2 = lmer(spec_df[, x] ~ 1 + (1|scientificName),
                         data = spec_df, REML = T, 
                         lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
     m2_aic = append(m2_aic, AIC(m2))
@@ -115,12 +115,12 @@ for(i in seq(400, 2400, 1)) {
 
 aic_dif = m1_aic - m2_aic
 
-jpeg(filename = '../../lichen figures/aic_comparision_fixed-slope_minus_var-slope_noNorm.jpeg',
+jpeg(filename = '../../lichen figures/aic_comparision_fixed-slope_minus_intercept-only.jpeg',
      width = 8, height = 6, units = 'in', res = 1200)
 par(mfrow = c(1,1))
 wv = seq(400, 2400, 1)
 plot(wv, aic_dif, type = 'l', xlab = 'Wavelength (nm)', ylab = '∆AIC', 
-     main = 'Fixed-slope AIC minus variable-slope AIC')
+     main = 'Fixed-slope AIC minus Intercept-only AIC')
 abline(h=0, col = 'blue', lty = 2)
 rect(0, -2, 2500, 2,
         col = rgb(red= 0, green=0, 

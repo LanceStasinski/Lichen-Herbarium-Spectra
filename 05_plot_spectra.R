@@ -110,6 +110,7 @@ plot(mean(spec50), col = 'brown', add = T)
 plot(mean(spec60), col = 'gray', add = T)
 
 # 15 years
+par(mfrow = c(1,1))
 spec15 = spec[meta(spec)$age <= 15, ]
 spec30_1 = spec[meta(spec)$age > 15, ] 
 spec30 = spec30_1[meta(spec30_1)$age <= 30,]
@@ -137,6 +138,7 @@ plot(mean(spec40), col = 'brown', add = T)
 plot(mean(spec60), col = 'gray', add = T)
 
 # Flavoparmelia caperata
+par(mfrow = c(2,2))
 spec_f = spec[meta(spec)$scientificName == 'Flavoparmelia_caperata',]
 spec_f = spec_f[meta(spec_f)$age < 60, ]
 
@@ -146,6 +148,60 @@ spec30 = spec30_1[meta(spec30_1)$age <= 30,]
 spec45_1 = spec_f[meta(spec_f)$age > 30, ]
 spec45 = spec45_1[meta(spec45_1)$age <= 45,]
 spec60_1 = spec_f[meta(spec_f)$age > 45, ]
+spec60 = spec60_1[meta(spec60_1)$age <= 60,]
+
+
+plot(mean(spec15), col = 'green')
+plot(mean(spec30), col = 'darkgreen', add = T)
+plot(mean(spec45), col = 'brown', add = T)
+plot(mean(spec60), col = 'gray', add = T)
+
+#Caloplaca flavovirescens
+spec_c = spec[meta(spec)$scientificName == 'Caloplaca_flavovirescens',]
+spec_c = spec_c[meta(spec_c)$age < 60, ]
+
+spec15 = spec_c[meta(spec_c)$age <= 15, ]
+spec30_1 = spec_c[meta(spec_c)$age > 15, ] 
+spec30 = spec30_1[meta(spec30_1)$age <= 30,]
+spec45_1 = spec_c[meta(spec_c)$age > 30, ]
+spec45 = spec45_1[meta(spec45_1)$age <= 45,]
+spec60_1 = spec_c[meta(spec_c)$age > 45, ]
+spec60 = spec60_1[meta(spec60_1)$age <= 60,]
+
+
+plot(mean(spec15), col = 'green')
+plot(mean(spec30), col = 'darkgreen', add = T)
+plot(mean(spec45), col = 'brown', add = T)
+plot(mean(spec60), col = 'gray', add = T)
+
+#Loxospora_elatina
+spec_l = spec[meta(spec)$scientificName == 'Loxospora_elatina',]
+spec_l = spec_l[meta(spec_l)$age < 60, ]
+
+spec15 = spec_l[meta(spec_l)$age <= 15, ]
+spec30_1 = spec_l[meta(spec_l)$age > 15, ] 
+spec30 = spec30_1[meta(spec30_1)$age <= 30,]
+spec45_1 = spec_l[meta(spec_l)$age > 30, ]
+spec45 = spec45_1[meta(spec45_1)$age <= 45,]
+spec60_1 = spec_l[meta(spec_l)$age > 45, ]
+spec60 = spec60_1[meta(spec60_1)$age <= 60,]
+
+
+plot(mean(spec15), col = 'green')
+plot(mean(spec30), col = 'darkgreen', add = T)
+plot(mean(spec45), col = 'brown', add = T)
+plot(mean(spec60), col = 'gray', add = T)
+
+#Chrysothrix_candelaris
+spec_ch = spec[meta(spec)$scientificName == 'Chrysothrix_candelaris',]
+spec_ch = spec_ch[meta(spec_ch)$age < 60, ]
+
+spec15 = spec_ch[meta(spec_ch)$age <= 15, ]
+spec30_1 = spec_ch[meta(spec_ch)$age > 15, ] 
+spec30 = spec30_1[meta(spec30_1)$age <= 30,]
+spec45_1 = spec_ch[meta(spec_ch)$age > 30, ]
+spec45 = spec45_1[meta(spec45_1)$age <= 45,]
+spec60_1 = spec_ch[meta(spec_ch)$age > 45, ]
 spec60 = spec60_1[meta(spec60_1)$age <= 60,]
 
 
