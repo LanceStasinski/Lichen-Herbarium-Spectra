@@ -119,11 +119,13 @@ spec45 = spec45_1[meta(spec45_1)$age <= 45,]
 spec60_1 = spec[meta(spec)$age > 45, ]
 spec60 = spec60_1[meta(spec60_1)$age <= 60,]
 
-
-plot(mean(spec15), col = 'green')
-plot(mean(spec30), col = 'darkgreen', add = T)
-plot(mean(spec45), col = 'brown', add = T)
-plot(mean(spec60), col = 'gray', add = T)
+jpeg(filename = '../../lichen figures/age_spec_mean.jpeg',
+     width = 6, height = 4, units = 'in', res = 1200)
+plot(mean(spec15), col = '#018571', ylab = 'Reflectance', xlab = 'Wavelength (nm)')
+plot(mean(spec30), col = '#80cdc1', add = T)
+plot(mean(spec45), col = '#dfc27d', add = T)
+plot(mean(spec60), col = '#a6611a', add = T)
+dev.off()
 
 # 20 years
 spec20 = spec[meta(spec)$age <= 20, ]
@@ -185,12 +187,16 @@ spec45_1 = spec_l[meta(spec_l)$age > 30, ]
 spec45 = spec45_1[meta(spec45_1)$age <= 45,]
 spec60_1 = spec_l[meta(spec_l)$age > 45, ]
 spec60 = spec60_1[meta(spec60_1)$age <= 60,]
+spec60 = NULL
 
-
+par(mfrow = c(1,1))
 plot(mean(spec15), col = 'green')
 plot(mean(spec30), col = 'darkgreen', add = T)
 plot(mean(spec45), col = 'brown', add = T)
-plot(mean(spec60), col = 'gray', add = T)
+if (!is.null(spec60)){
+  plot(mean(spec60), col = 'gray', add = T)
+}
+
 
 #Chrysothrix_candelaris
 spec_ch = spec[meta(spec)$scientificName == 'Chrysothrix_candelaris',]
@@ -209,3 +215,88 @@ plot(mean(spec15), col = 'green')
 plot(mean(spec30), col = 'darkgreen', add = T)
 plot(mean(spec45), col = 'brown', add = T)
 plot(mean(spec60), col = 'gray', add = T)
+
+#all species over time
+#function
+plot_species_spec = function(species_spec, age) {
+  if (age == 15) {
+    spec15 = NULL
+    spec15 = species_spec[meta(species_spec)$age <= 15, ]
+    spec
+    if (!is.null(spec15)) {
+      spec15 = aggregate(spec15, by = meta(spec15)$X, mean, try_keep_txt(mean))
+      plot(spec15, col = '#018571', add = T)
+    }
+  } else if (age == 30) {
+    spec30_1 = NULL
+    spec30 = NULL
+    spec30_1 = species_spec[meta(species_spec)$age > 15, ]
+    spec30 = spec30_1[meta(spec30_1)$age <= 30,]
+    
+    if (!is.null(spec30)) {
+      spec30 = aggregate(spec30, by = meta(spec30)$X, mean, try_keep_txt(mean))
+      plot(spec30, col = '#80cdc1', add = T)
+    }
+  } else if (age == 45) {
+    spec45_1 = NULL
+    spec45 = NULL
+    spec45_1 = species_spec[meta(species_spec)$age > 30, ]
+    spec45 = spec45_1[meta(spec45_1)$age <= 45,]
+    if (!is.null(spec45)) {
+      spec45 = aggregate(spec45, by = meta(spec45)$X, mean, try_keep_txt(mean))
+      plot(spec45, col = '#dfc27d', add = T)
+    }
+  } else if (age == 60) {
+    spec60_1 = NULL
+    spec60 = NULL
+    spec60_1 = species_spec[meta(species_spec)$age > 45, ]
+    spec60 = spec60_1[meta(spec60_1)$age <= 60,]
+    if (!is.null(spec60)) {
+      spec60 = aggregate(spec60, by = meta(spec60)$X, mean, try_keep_txt(mean))
+      plot(spec60, col = '#a6611a', add = T)
+    }
+  }
+  
+}
+
+
+plot_aging_spec = function(species) {
+  
+  for(i in 1:length(species)) {
+    species_spec = spec[meta(spec)$scientificName == species[i],]
+
+    null_spec = rep(-.05, 2001)
+    m = matrix(nrow = 1, ncol = 2001)
+    colnames(m) = seq(400, 2400, 1)
+    m = rbind(m, null_spec)
+    m = as.matrix(m[-1,])
+    null_spec = as_spectra(t(m))
+    plot(null_spec, ylim = c(0, 0.8), xlab = 'Wavelength (nm)',
+         ylab = 'Reflectance', main = species[i])
+    
+    try(plot_species_spec(species_spec, 15))
+    try(plot_species_spec(species_spec, 30))
+    try(plot_species_spec(species_spec, 45))
+    try(plot_species_spec(species_spec, 60))
+    
+  }
+}
+
+
+
+
+#plots
+spec = readRDS("spectra/lichen_spectra.rds")
+spec = spec[meta(spec)$age <= 60,]
+species = sort(unique(meta(spec)$scientificName))
+
+par(mfrow = c(3,2))
+
+plot_aging_spec(species)
+
+
+
+
+
+
+

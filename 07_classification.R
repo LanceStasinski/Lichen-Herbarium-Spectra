@@ -24,7 +24,7 @@ pls = classify(spectra = spectra,
 
 saveRDS(pls, 'models/class_age.rds')
 
-pls = readRDS('models/class.rds')
+pls = readRDS('models/order.rds')
 ################################################################################
 #Assess accuracy and kappa
 ################################################################################
