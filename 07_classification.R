@@ -24,7 +24,7 @@ pls = classify(spectra = spectra,
 
 saveRDS(pls, 'models/class_age.rds')
 
-pls = readRDS('models/order.rds')
+pls = readRDS('models/species_age.rds')
 ################################################################################
 #Assess accuracy and kappa
 ################################################################################
@@ -119,6 +119,9 @@ mtext("Prediction", side = 3, cex = 2.5, at = 2, line = 3)
 ################################################################################
 #Variable importance
 ################################################################################
+pls = readRDS('models/class_age.rds')
+
+#plot vip as spectra
 vip_to_spec = function(x){
   t.vip = t(x[,-1])
   t.vip = as.data.frame(t.vip)
@@ -138,5 +141,31 @@ vip.list = pls[[1]]
 par(mfrow = c(2,3))
 for (j in 1:length(vip.list)) {
   vip_to_spec(vip.list[[j]])
+}
+dev.off()
+
+#plot top and bottom ten vip
+vip.list = pls[[1]]
+#vip = vip.list[[1]]
+vip_to_bar = function(vip) {
+  vip = vip[, -1]
+  vip_mean = rowMeans(vip)
+  sorted = sort(vip_mean)
+  best = sorted[1998:2002]
+  bm = as.data.frame(as.matrix(rev(best)))
+  bm$color = '#d8b365' 
+  worst = sorted[1:5]
+  wm = as.data.frame(as.matrix(rev(worst)))
+  wm$color = '#5ab4ac'
+  m = rbind(bm, wm)
+  barplot(rev(m[,1]), horiz = T, main = names(vip)[1],
+          names.arg = rev(rownames(m)) , col = m$color)
+}
+
+jpeg(filename = '../../lichen figures/vip_rank_class.jpeg',
+     width = 6, height = 8, units = 'in', res = 1200)
+par(las=2, mfrow=c(2,3))
+for (j in 1:19) {
+  vip_to_bar(vip.list[[j]])
 }
 dev.off()
