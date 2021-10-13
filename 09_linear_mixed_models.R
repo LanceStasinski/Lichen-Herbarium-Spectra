@@ -97,6 +97,9 @@ m2_aic = c()
 m1_bic = c()
 m2_bic = c()
 
+m3_aic = c()
+m3_bic = c()
+
 for(i in seq(400, 2400, 1)) {
     x = toString(i)
    
@@ -111,28 +114,40 @@ for(i in seq(400, 2400, 1)) {
                         lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
     m2_aic = append(m2_aic, AIC(m2))
     m2_bic = append(m2_bic, BIC(m2))
+    
+    m3 = lmer(spec_df[, x] ~ 1 + (1 + age|scientificName),
+              data = spec_df, REML = T, 
+              lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
+    m3_aic = append(m3_aic, AIC(m3))
+    m3_bic = append(m3_bic, BIC(m3))
+    
 }
 
-aic_dif = m1_aic - m2_aic
+aic_dif1 = m1_aic - m2_aic
+aic_dif2 = m1_aic - m3_aic
 
-jpeg(filename = '../../lichen figures/aic_comparision_fixed-slope_minus_intercept-only.jpeg',
+jpeg(filename = '../../lichen figures/aic_comparision_fixed-slope_vs_others.jpeg',
      width = 8, height = 6, units = 'in', res = 1200)
 par(mfrow = c(1,1))
 wv = seq(400, 2400, 1)
-plot(wv, aic_dif, type = 'l', xlab = 'Wavelength (nm)', ylab = '∆AIC', 
-     main = 'Fixed-slope AIC minus Intercept-only AIC')
-abline(h=0, col = 'blue', lty = 2)
+plot(wv, aic_dif1, type = 'l', xlab = 'Wavelength (nm)', ylab = '∆AIC', 
+     main = '', col = 'blue')
+abline(h=0, col = 'black', lty = 2)
 rect(0, -2, 2500, 2,
         col = rgb(red= 0, green=0, 
                   blue=0, alpha=0.1),
         lty = 0)
+lines(wv, aic_dif2, col = 'red')
+legend('bottomright',
+       c('∆AIC Intercept-only', '∆AIC Variable-slope'),
+       col = c('blue', 'red'), lty = c(1,1))
 dev.off()
+
+
 
 plot(wv, m1_bic, col = 'blue', type = 'l', xlab = 'Wavelength (nm)', ylab = 'BIC')
 lines(wv, m2_bic, col = 'red')
-legend('bottomright',
-       c('M1', 'M2'),
-       col = c('blue', 'red'), lty = c(1,1))
+
 
 ################################################################################
 # Species as a random effect - with vector norm - no normMag
