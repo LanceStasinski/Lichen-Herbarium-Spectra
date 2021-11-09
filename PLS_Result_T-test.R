@@ -51,7 +51,23 @@ t.test2(m1 = 89.0056, m2 = 89.493, s1 = 1.28294, s2 = 1.380609, n1 = 100, n2 = 1
 
 t.test2(m1 = 82.45833, m2 = 83.86111, s1 = 2.141263, s2 = 2.012594, n1 = 100, n2 = 100)
 
+################################################################################
 
+species = readRDS('models/species.rds')[[4]]
+species_age = readRDS('models/species_age.rds')[[4]]
+t.test(sqrt(species), sqrt(species_age))
 
+family = readRDS('models/family.rds')[[4]]
+family_age = readRDS('models/family_age.rds')[[4]]
+t.test(family, family_age)
+t.test(sqrt(family), sqrt(family_age))
 
+order = readRDS('models/order.rds')[[4]]
+order_age = readRDS('models/order_age.rds')[[4]]
+t.test(order, order_age)
+t.test(sqrt(order), sqrt(order_age))
 
+class = readRDS('models/class.rds')[[4]]
+class_age = readRDS('models/class_age.rds')[[4]]
+t.test(class, class_age)
+t.test(sqrt(class), sqrt(class_age))

@@ -23,6 +23,7 @@ classify = function(spectra, className, ncomp, resampling, n_iteration, include_
   spec_mat = as.matrix(spec_all)
   spec_all.df = as.data.frame(spec_all)
   
+
   #combine relevant meta data to matrix
   spec_df = as.data.frame(spec_mat)
   spec_df = cbind(spec_df, spec_all.df[className])
@@ -85,11 +86,14 @@ classify = function(spectra, className, ncomp, resampling, n_iteration, include_
   
     
     #variable importance
-    vip = varImp(plsFit)
-    for (k in 1:length(uniqueNames)) {
-      class.vip = assign(paste0(uniqueNames[k], i), vip$importance[uniqueNames[k]])
-      vip.list[[k]] = cbind(vip.list[[k]], get('class.vip'))
+    if (length(uniqueNames) > 2) {
+      vip = varImp(plsFit)
+      for (k in 1:length(uniqueNames)) {
+        class.vip = assign(paste0(uniqueNames[k], i), vip$importance[uniqueNames[k]])
+        vip.list[[k]] = cbind(vip.list[[k]], get('class.vip'))
+      }
     }
+    
     
     #accuracy objects for determining n components
     a = assign(paste0('a', i), as.matrix(plsFit$results$Accuracy))

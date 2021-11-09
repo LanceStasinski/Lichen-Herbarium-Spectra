@@ -17,14 +17,14 @@ classify = readRDS("functions/plsda.rds")
 
 pls = classify(spectra = spectra, 
                className = "Class",
-               ncomp = 28, 
+               ncomp = 4, 
                resampling = 'up',
-               n_iteration = 100,
-               include_age = T)
+               n_iteration = 50,
+               include_age = F)
 
-saveRDS(pls, 'models/class_age.rds')
+saveRDS(pls, 'models/morphology.rds')
 
-pls = readRDS('models/class.rds')
+pls = readRDS('models/species.rds')
 ################################################################################
 #Assess accuracy and kappa
 ################################################################################
@@ -48,10 +48,10 @@ a.lower = a.avg - a.sd
 a.higher = a.avg + a.sd
 
 #Graph to visually choose optimal number of components
-x = 1:60
+x = seq(1: length(a.avg))
 par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(5.1, 4.1, 4.1, 2.1))
 plot(x, a.avg, type = 'p', pch = 16, cex = .75, ylab = 'Accuracy', 
-     xlab = 'Component', xlim = c(1,60), main = 'Accuracy for Species_ID', 
+     xlab = 'Component', xlim = c(1,length(a.avg)), main = 'Accuracy for Class', 
      ylim = c(0,1))
 arrows(x, a.lower, x, a.higher,length=0.05, angle=90, code=3)
 abline(v = which.max(a.avg), col = 'blue')

@@ -30,14 +30,19 @@ var_slope = lmer(normalization_magnitude ~ age + (1 + age|scientificName),
                              optCtrl = list(maxfun = 1e5)))
 
 
+partR2(fixed_slope, data = spec_df, R2_type = "conditional", nboot = 10)
+#partR2(fixed_slope, data = spec_df, R2_type = "marginal", nboot = 10)
+partR2(var_slope, data = spec_df, R2_type = "conditional", nboot = 10)
+#partR2(var_slope, data = spec_df, R2_type = "marginal", nboot = 10)
+
 AIC(m)
 AIC(intercept)
 AIC(fixed_slope)
 AIC(var_slope)
 
 
-partR2(lmm, data = spec_df, R2_type = "marginal", nboot = 10)
-partR2(lmm, data = spec_df, R2_type = "conditional", nboot = 10)
+partR2(fixed_slope, data = spec_df, R2_type = "marginal", nboot = 10)
+partR2(fixed_slope, data = spec_df, R2_type = "conditional", nboot = 10)
 
 #####################################
 #plot
@@ -58,9 +63,9 @@ for (i in 1:length(species)) {
 
 coefs = coef(fixed_slope)
 
-jpeg(filename = '../../lichen figures/normMag-age_700-1900.jpeg',
+jpeg(filename = '../../lichen figures/Brightness vs age/normMag-age_700-1900.jpeg',
      width = 9, height = 8, units = 'in', res = 1200)
-plot(spec_df$age, spec_df$normalization_magnitude, ylab = 'Normalization Magnitude',
+plot(spec_df$age, spec_df$normalization_magnitude, ylab = 'Vector Magnitude',
      xlab = ' Age', col = spec_df$color, pch = 16)
 for (i in 1:29) {
   abline(coefs$scientificName$`(Intercept)`[i], coefs$scientificName$age[i],

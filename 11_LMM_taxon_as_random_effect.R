@@ -19,8 +19,8 @@ meta(spectra_percent) = data
 spec_df = as.data.frame(spectra_percent)
 
 #setup empty vectors
-ranIntercepts = as.data.frame(matrix(nrow = 29))
-rownames(ranIntercepts) = sort(unique(spec_df$Family))
+ranIntercepts = as.data.frame(matrix(nrow = 16))
+rownames(ranIntercepts) = sort(unique(spec_df$Order))
 
 intercept_variance = c()
 resid_variance = c()
@@ -45,7 +45,7 @@ marR2_upper = c()
 #run model for each wavelength and append metrics
 for(i in seq(400, 2400, 1)) {
   x = toString(i)
-  lmm = lmer(spec_df[, x] ~ age + (1|Family),
+  lmm = lmer(spec_df[, x] ~ age + (1|Order),
              data = spec_df, REML = T, 
              lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
   
@@ -100,7 +100,7 @@ stats_list = list.append(stats_list, marR2) #14
 stats_list = list.append(stats_list, marR2_lower) #15
 stats_list = list.append(stats_list, marR2_upper) #16
 
-saveRDS(stats_list, 'models/lmms/lmm_60yrs_fixedSlope_family.rds')
+saveRDS(stats_list, 'models/lmms/lmm_60yrs_fixedSlope_Order.rds')
 
 
 ###############################
@@ -109,15 +109,15 @@ saveRDS(stats_list, 'models/lmms/lmm_60yrs_fixedSlope_family.rds')
 
 stats_list = readRDS('models/lmms/lmm_60yrs_fixedSlope.rds')
 
-jpeg(filename = '../../lichen figures/fixedSlope_results_noNorm.jpeg',
-     width = 8, height = 12, units = 'in', res = 1200)
-par(mfrow = c(3,2))
+jpeg(filename = '../../lichen figures/LMM output/fixedSlope_order.jpeg',
+     width = 7, height = 8, units = 'in', res = 1200)
+par(mfrow = c(3,2), cex.lab = 1.35, cex.axis = 1)
 #slopes
 wv = seq(400, 2400, 1)
 plot(wv, stats_list[[6]],
      type = 'l', 
      xlab = 'Wavelength (nm)', 
-     ylab = 'Effect of age (% reflectance/year)',
+     ylab = '% reflectance / year',
      ylim = c(min(stats_list[[9]]), max(stats_list[[10]])),
      main = 'Fixed slope')
 polygon(c(wv, rev(wv)), c(stats_list[[9]], rev(stats_list[[10]])),
@@ -131,7 +131,7 @@ wv = seq(400, 2400, 1)
 plot(wv, stats_list[[5]],
      type = 'l', 
      xlab = 'Wavelength (nm)', 
-     ylab = 'Intercept (% reflectance)',
+     ylab = '% reflectance',
      ylim = c(min(stats_list[[1]]), max(stats_list[[1]])),
      main = 'Intercepts')
 for (i in 1:nrow(stats_list[[1]])){
@@ -159,9 +159,9 @@ lines(wv, stats_list[[14]], col = rgb(1,0,0,1))
 polygon(c(wv, rev(wv)), c(stats_list[[15]], rev(stats_list[[16]])),
         col = rgb(1,0,0, 0.2),
         lty = 0)
-legend('topright',
-       c('Conditional R2', 'Marginal R2'),
-       col = c(rgb(0,0,1,1), rgb(1,0,0,1)), lty = c(1,1))
+#legend('topright',
+       #c('Conditional', 'Marginal'),
+      # col = c(rgb(0,0,1,1), rgb(1,0,0,1)), lty = c(1,1))
 
 
 #variances
@@ -169,21 +169,21 @@ wv = seq(400, 2400, 1)
 plot(wv, stats_list[[2]],
      ylim = c(min(stats_list[[2]]), max(stats_list[[2]])),
      main = 'Random effects variance',
-     ylab = 'Variance',
+     ylab = 'Squared reflectance',
      xlab = 'Wavelength (nm)',
      col = 'blue',
      type = 'l')
-lines(wv, stats_list[[3]], col = 'gray')
-legend('topright',
-       c('Intercept', 'Residual'),
-       col = c('blue', 'gray'), lty = c(1,1,1))
+lines(wv, stats_list[[3]], col = 'gray20')
+#legend('topright',
+       #c('Intercept', 'Residual'),
+       #col = c('blue', 'gray'), lty = c(1,1,1))
 
 #Random Variance explained
 wv = seq(400, 2400, 1)
 plot(wv, stats_list[[4]],
      ylim = range(stats_list[[4]]),
      main = 'Random effects variance explained by species',
-     ylab = 'Proportion of variance explained',
+     ylab = 'Proportion of variance',
      xlab = 'Wavelength (nm)',
      type = 'l')
 

@@ -4,7 +4,7 @@
 ################################################################################
 
 library(spectrolab)
-library(lme4)
+zlibrary(lme4)
 library(nlme)
 library(ggplot2)
 library(ggeffects)  
@@ -584,7 +584,7 @@ plot(wv, stats_list[[4]],
 dev.off()
 
 ################################################################################
-# Species as a random effect - no vector normalization
+# Species (or other taxon) as a random effect - no vector normalization
 ################################################################################
 spectra = readRDS('spectra/lichen_spectra.rds')
 spectra = spectra[meta(spectra)$age <= 60, ]
@@ -596,7 +596,7 @@ meta(spectra_percent) = data
 spec_df = as.data.frame(spectra_percent)
 
 ranIntercepts = as.data.frame(matrix(nrow = 29))
-rownames(ranIntercepts) = sort(unique(spec_df$scientificName))
+rownames(ranIntercepts) = sort(unique(spec_df$Family))
 
 
 intercept_variance = c()
@@ -621,7 +621,7 @@ marR2_upper = c()
 
 for(i in seq(400, 2400, 1)) {
     x = toString(i)
-    lmm = lmer(spec_df[, x] ~ age + (1|scientificName),
+    lmm = lmer(spec_df[, x] ~ age + (1|Family),
                   data = spec_df, REML = T, 
                   lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
     
@@ -676,7 +676,7 @@ stats_list = list.append(stats_list, marR2) #14
 stats_list = list.append(stats_list, marR2_lower) #15
 stats_list = list.append(stats_list, marR2_upper) #16
 
-saveRDS(stats_list, 'models/lmms/lmm_60yrs_fixedSlope.rds')
+saveRDS(stats_list, 'models/lmms/lmm_60yrs_fixedSlope_family.rds')
 
 
 ###############################

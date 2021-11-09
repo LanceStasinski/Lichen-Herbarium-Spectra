@@ -40,19 +40,19 @@ m3_bic = c()
 for(i in seq(400, 2400, 1)) {
   x = toString(i)
   
-  m1 = lmer(spec_df[, x] ~ age  + (1|scientificName),
+  m1 = lmer(spec_df[, x] ~ age  + (1|Class),
             data = spec_df, REML = T, 
             lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
   m1_aic = append(m1_aic, AIC(m1))
   m1_bic = append(m1_bic, BIC(m1))
   
-  m2 = lmer(spec_df[, x] ~ 1 + (1|scientificName),
+  m2 = lmer(spec_df[, x] ~ 1 + (1|Class),
             data = spec_df, REML = T, 
             lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
   m2_aic = append(m2_aic, AIC(m2))
   m2_bic = append(m2_bic, BIC(m2))
   
-  m3 = lmer(spec_df[, x] ~ 1 + (1 + age|scientificName),
+  m3 = lmer(spec_df[, x] ~ 1 + (1 + age|Class),
             data = spec_df, REML = T, 
             lmerControl(optimizer ='bobyqa', boundary.tol = 1e-5, optCtrl = list(maxfun = 1e5)))
   m3_aic = append(m3_aic, AIC(m3))
@@ -65,12 +65,12 @@ aic_dif1 = m1_aic - m2_aic
 aic_dif2 = m1_aic - m3_aic
 
 #plot delta AIC
-jpeg(filename = '../../lichen figures/aic_comparision_fixed-slope_vs_others.jpeg',
+jpeg(filename = '../../lichen figures/AIC/Class_delta_AIC.jpeg',
      width = 8, height = 6, units = 'in', res = 1200)
 par(mfrow = c(1,1))
 wv = seq(400, 2400, 1)
 plot(wv, aic_dif1, type = 'l', xlab = 'Wavelength (nm)', ylab = '∆AIC', 
-     main = '', col = 'blue')
+     main = 'Class as random effect', col = 'blue')
 abline(h=0, col = 'black', lty = 2)
 rect(0, -2, 2500, 2,
      col = rgb(red= 0, green=0, 
