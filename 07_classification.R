@@ -12,19 +12,20 @@ library(spectrolab)
 #run plsda
 ################################################################################
 spectra = readRDS('spectra/lichen_spectra.rds')
+#spectra = spectra[, seq(400, 2400, 100)]
 
 classify = readRDS("functions/plsda.rds")
 
 pls = classify(spectra = spectra, 
-               className = "Class",
+               className = "scientificName",
                ncomp = 4, 
                resampling = 'up',
-               n_iteration = 50,
-               include_age = F)
+               n_iteration = 25,
+               include_age = T)
 
 saveRDS(pls, 'models/morphology.rds')
 
-pls = readRDS('models/species.rds')
+pls = readRDS('models/species_age.rds')
 ################################################################################
 #Assess accuracy and kappa
 ################################################################################
@@ -97,8 +98,8 @@ write.csv(cm.total, "figures/confusion_matrices/cm_csv/class_age.csv")
 #plot confusion matrix
 cols = colorRampPalette(c('white', '#fe9929'))
 
-jpeg(filename = '../../lichen figures/class_corrplot.jpeg',
-     width = 6, height = 6, units = 'in', res = 1200)
+jpeg(filename = '../../lichen figures/species-age_corrplot.jpeg',
+     width = 12, height = 12, units = 'in', res = 1200)
 par(mfrow = c(1,1))
 corrplot::corrplot(as.matrix(cm.total),
                    cl.pos = 'n',
@@ -109,7 +110,7 @@ corrplot::corrplot(as.matrix(cm.total),
                    na.label.col = 'white',
                    addCoef.col = '#542788',
                    number.digits = 2,
-                   number.cex = 1,
+                   number.cex = .7,
                    col = cols(10))
 dev.off()
 
