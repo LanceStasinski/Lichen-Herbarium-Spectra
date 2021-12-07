@@ -40,6 +40,7 @@ sd(kappa)
 ################################################################################
 #Accuracy values for choosing the optimal number of components to use
 ################################################################################
+pls = readRDS('models/class.rds')
 a.fit = pls[[2]]
 a.total = a.fit[,-1]
 a.avg = as.matrix(rowMeans(a.total))
@@ -48,17 +49,22 @@ a.sd = as.matrix(rowSds(a.total))
 a.lower = a.avg - a.sd
 a.higher = a.avg + a.sd
 
+lower.avgs = a.avg[a.avg < a.lower[which.max(a.avg)]]
+
 #Graph to visually choose optimal number of components
+jpeg(filename = '../../lichen figures/acc_vs_comp/class.jpeg',
+     width = 10, height = 8, units = 'in', res = 600)
 x = seq(1: length(a.avg))
 par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(5.1, 4.1, 4.1, 2.1))
-plot(x, a.avg, type = 'p', pch = 16, cex = .75, ylab = 'Accuracy', 
-     xlab = 'Component', xlim = c(1,length(a.avg)), main = 'Accuracy for Class', 
+plot(x, a.avg, type = 'p', pch = 16, cex = .5, ylab = 'Accuracy', 
+     xlab = 'Component', xlim = c(1,length(a.avg)), main = 'Class', 
      ylim = c(0,1))
 arrows(x, a.lower, x, a.higher,length=0.05, angle=90, code=3)
-abline(v = which.max(a.avg), col = 'blue')
-abline(h = max(a.avg), col = "Red")
-legend('bottomright', legend = c('Mean', 'Maximum accuracy','Best component'), 
-       pch = c(16, NA, NA), lty = c(NA, 1, 1), col = c('black', 'red', 'blue'))
+abline(v = which.max(lower.avgs) + 1, col = 'blue')
+abline(h = max(a.lower), col = "Red")
+#legend('bottomright', legend = c('Mean', 'Within 1 SD of Max component','Optimal component'), 
+       #pch = c(16, NA, NA), lty = c(NA, 1, 1), col = c('black', 'red', 'blue'))
+dev.off()
 
 ################################################################################
 #Confusion/Classification Matrices
