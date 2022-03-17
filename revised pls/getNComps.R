@@ -2,6 +2,7 @@
 # Calculate optimal number of components from downsampling plsda model objects
 ################################################################################
 getNComps = function(directory, ncomp) {
+  require(matrixStats)
   models = list.files(path = directory)
   accuracies = matrix(nrow = ncomp)
   

@@ -2,7 +2,8 @@
 # PLS function
 ################################################################################
 
-runPlsda = function(iteration, spectra, className, ncomp, resampling, include_age, directory) {
+runPlsda = function(iteration, spectra, className, ncomp, resampling, include_age,
+                    modelDirectory, cmDirectory) {
   #require packages
   require(spectrolab)
   require(caret)
@@ -58,7 +59,15 @@ runPlsda = function(iteration, spectra, className, ncomp, resampling, include_ag
   fileName = paste(paste('pls', resampling, toString(iteration), sep = "_"),
                    "rds", sep = ".")
   
-  saveRDS(plsFit, paste(directory, fileName, sep = "/"))
+  saveRDS(plsFit, paste(modelDirectory, fileName, sep = "/"))
+  
+  if (resampling == 'up') {
+    plsClasses = predict(plsFit, newdata = testing)
+    cm = confusionMatrix(data = plsClasses, as.factor(testing[[className]]))
+    cmFileName = paste(paste('cm', toString(iteration), sep="_"), "rds",
+                       sep = ".")
+    saveRDS(cm, paste(cmDirectory, cmFileName, sep = "/"))
+  }
   
 }
 
