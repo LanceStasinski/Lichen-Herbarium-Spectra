@@ -10,6 +10,7 @@ library(parallel)
 runPlsda = readRDS("revised pls/functions/runPlsda.rds")
 getNComps = readRDS("revised pls/functions/getNComps.rds")
 getData = readRDS("revised pls/functions/getData.rds")
+plotConfusionMatrix = readRDS("revised pls/functions/plotConfusionMatrix.rds")
 
 #spectra
 spectra = readRDS("spectra/lichen_spectra.rds")
@@ -69,6 +70,11 @@ parLapply(cl = cluster, iterations, runPlsda, spectra = spectra,
 # get overall accuracy, mean confusion matrix, and standard deviation (1) 
 # confusion matrix
 data = getData(cmDirectory)
+
+
+#plot confusion matrix as high resolution jpeg
+plotConfusionMatrix(data$cmMean, directory = "revised pls/images",
+                    fileName = "test.jpeg")
 
 
 
