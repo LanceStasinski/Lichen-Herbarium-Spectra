@@ -11,6 +11,7 @@ runPlsda = readRDS("revised pls/functions/runPlsda.rds")
 getNComps = readRDS("revised pls/functions/getNComps.rds")
 getData = readRDS("revised pls/functions/getData.rds")
 plotConfusionMatrix = readRDS("revised pls/functions/plotConfusionMatrix.rds")
+plotVip = readRDS("revised pls/functions/plotVip.rds")
 
 #spectra
 spectra = readRDS("spectra/lichen_spectra.rds")
@@ -67,15 +68,19 @@ parLapply(cl = cluster, iterations, runPlsda, spectra = spectra,
           include_age = includeAge, modelDirectory = upSamplingDirectory, 
           cmDirectory = cmDirectory)
 
+################################################################################
+# Get data and plot confusion matrices and variable importance values
+################################################################################
+
 # get overall accuracy, mean confusion matrix, and standard deviation (1) 
 # confusion matrix
 data = getData(cmDirectory)
 
-
 #plot confusion matrix as high resolution jpeg
-plotConfusionMatrix(data$cmMean, directory = "revised pls/images",
+plotConfusionMatrix(data$cmMean, directory = "revised pls/images/confusion_matrices",
                     fileName = "test.jpeg")
 
-
-
+#plot top 5 and bottom 5 variable importance values
+plotVip(modelDirectory = upSamplingDirectory, saveDirectory = "revised pls/images/vip_plots",
+        baseFileName = "testVip")
 
