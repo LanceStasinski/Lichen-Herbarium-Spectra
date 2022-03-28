@@ -28,6 +28,9 @@ runPlsda = function(iteration, spectra, className, ncomp, resampling, include_ag
   
   if (include_age == TRUE) {
     spec_df2$age = spec_df1$age
+    age = 'with-age'
+  } else {
+    age = 'no-age'
   }
 
   #create data partition: 70% of data for training, 30% for testing
@@ -56,15 +59,17 @@ runPlsda = function(iteration, spectra, className, ncomp, resampling, include_ag
     trControl = ctrl,
     tuneLength = ncomp)
   
+  
+  
   if (resampling == 'down') {
-    accFileName = paste(paste('accuracy', className, toString(iteration), sep = "_"),
+    accFileName = paste(paste('accuracy', className, age, toString(iteration), sep = "_"),
                         "rds", sep = ".")
     saveRDS(plsFit$results$Accuracy, paste(accuracyDirectory, accFileName,
                                            sep = '/'))
   }
   
   #file name - change if you'd prefer a different file name
-  fileName = paste(paste('pls', className, resampling, toString(iteration), sep = "_"),
+  fileName = paste(paste('pls', className, age, resampling, toString(iteration), sep = "_"),
                    "rds", sep = ".")
   
   if (saveModelObjec) {

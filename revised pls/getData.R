@@ -2,7 +2,7 @@
 # Extract necessary data from model objects
 ################################################################################
 
-getData = function(directory) {
+getData = function(directory, metricsDirectory, className, includesAge) {
   directory = 'revised pls/data/confusion-matrices'
   require(rlist)
   matrices = list.files(path = directory)
@@ -32,7 +32,16 @@ getData = function(directory) {
   colnames(cmSD) = colnames(as.matrix(cmList[[1]]))
   
   metrics = list(accuracies = accuracies, overallAccuracy = mean(accuracies),
-                 cmMean = cmMean, cmSD = cmSD)
+                 cmMean = cmMean, cmSD = cmSD, ncomps = length(matrices))
+  
+  if (includesAge) {
+    age = 'with-age'
+  } else {
+    age = 'no-age'
+  }
+  
+  fileName = paste(paste(className, age, 'metrics', sep = '_'), '.rds', sep = '.')
+  saveRDS(metrics, paste(metricsDirectory, fileName, sep = '/'))
   
   return(metrics)
 }
