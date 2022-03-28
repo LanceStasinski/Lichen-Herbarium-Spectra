@@ -28,7 +28,7 @@ plotVip = function(modelDirectory, saveDirectory, baseFileName) {
     vip = vip[, -1]
     vip_mean = rowMeans(vip)
     sorted = sort(vip_mean)
-    best = sorted[length(sorted)-5:length(sorted)]
+    best = sorted[(length(sorted)-4):length(sorted)]
     bm = as.data.frame(as.matrix(rev(best)))
     bm$color = '#d8b365' 
     worst = sorted[1:5]
@@ -36,7 +36,7 @@ plotVip = function(modelDirectory, saveDirectory, baseFileName) {
     wm$color = '#5ab4ac'
     m = rbind(bm, wm)
     barplot(rev(m[,1]), horiz = T, main = names(vip)[1],
-            names.arg = rev(rownames(m)) , col = m$color)
+            names.arg = rev(rownames(m)), col = m$color, cex.names = 0.75)
   }
   
   fileNum = 1
@@ -45,10 +45,14 @@ plotVip = function(modelDirectory, saveDirectory, baseFileName) {
   while (startIdx < length(vipList)) {
     fileName = paste(paste(baseFileName, fileNum, sep = "_"), "jpeg", sep = ".")
     jpeg(filename = paste(saveDirectory, fileName, sep = "/"),
-         width = 6, height = 8, units = 'in', res = 1200)
+         width = 10, height = 10, units = 'in', res = 1200)
     par(las = 2, mfrow = c(3,4))
-    for (i in startIdx:endIdx) {
-      if (is.null(vip[[i]])) next
+    if (endIdx < length(vipList)) {
+      end = endIdx
+    } else {
+      end = length(vipList)
+    }
+    for (i in startIdx:end) {
       vip_to_bar(vipList[[i]])
     }
     dev.off()
