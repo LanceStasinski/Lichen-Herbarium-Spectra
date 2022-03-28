@@ -3,7 +3,8 @@
 ################################################################################
 
 runPlsda = function(iteration, spectra, className, ncomp, resampling, include_age,
-                    modelDirectory, cmDirectory) {
+                    modelDirectory, accuracyDirectory, cmDirectory,
+                    saveModelObject) {
   #require packages
   require(spectrolab)
   require(caret)
@@ -55,11 +56,20 @@ runPlsda = function(iteration, spectra, className, ncomp, resampling, include_ag
     trControl = ctrl,
     tuneLength = ncomp)
   
+  if (resampling == 'down') {
+    accFileName = paste(paste('accuracy', className, toString(iteration), sep = "_"),
+                        "rds", sep = ".")
+    saveRDS(plsFit$results$Accuracy, paste(accuracyDirectory, accFileName,
+                                           sep = '/'))
+  }
+  
   #file name - change if you'd prefer a different file name
-  fileName = paste(paste('pls', resampling, toString(iteration), sep = "_"),
+  fileName = paste(paste('pls', className, resampling, toString(iteration), sep = "_"),
                    "rds", sep = ".")
   
-  saveRDS(plsFit, paste(modelDirectory, fileName, sep = "/"))
+  if (saveModelObjec) {
+    saveRDS(plsFit, paste(modelDirectory, fileName, sep = "/"))
+  }
   
   if (resampling == 'up') {
     plsClasses = predict(plsFit, newdata = testing)
