@@ -3,7 +3,6 @@
 ################################################################################
 
 getData = function(directory, metricsDirectory, className, includesAge) {
-  directory = 'revised pls/data/confusion-matrices'
   require(rlist)
   matrices = list.files(path = directory)
   

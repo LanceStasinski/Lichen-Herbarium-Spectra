@@ -72,7 +72,7 @@ runPlsda = function(iteration, spectra, className, ncomp, resampling, include_ag
   fileName = paste(paste('pls', className, age, resampling, toString(iteration), sep = "_"),
                    "rds", sep = ".")
   
-  if (saveModelObjec) {
+  if (saveModelObject) {
     saveRDS(plsFit, paste(modelDirectory, fileName, sep = "/"))
   }
   
